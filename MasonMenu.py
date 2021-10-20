@@ -23,34 +23,63 @@ menuI = soupI.find("div", id=idCurrent)
 menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
-menus = [menuI, menuS, menuO]
+menus = []
 
 TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.fbB_55cRs0a4hn0v065apR1b3NE'
 
-client = discord.Client()
-ikes=891893981393354783
-southside=891894003547660321
-other=899727333970292797
+bot = commands.Bot(command_prefix="$")
 
-@client.event
+ikes = 0
+southside = 0
+other = 0
+
+@bot.event
 async def on_ready():
     print('Bot Online')
+
+@bot.command(name='ikes')
+async def ikes(ctx):
+    global ikes 
+    global ikesFlag 
+    ikes = ctx.channel.id
+    menus.append(menuI)
+    await ctx.channel.send("Ike's channel has been set")
+
+@bot.command(name='southside')
+async def southside(ctx):
+    global southside
+    global ssFlag
+    southside = ctx.channel.id
+    menus.append(menuS)
+    await ctx.channel.send("Southside's channel has been set")
+
+@bot.command(name='frontroyale')
+async def frontroyale(ctx):
+    global other
+    global otherFlag
+    other = ctx.channel.id   
+    menus.append(menuO)
+    await ctx.channel.send("Front Royale Common's channel has been set")
 
 @tasks.loop(hours=24.0)
 async def called_once_a_day():
     for m in menus:
-        if m == menuI:
-            message_channel = client.get_channel(ikes)
-        elif m == menuS:
-            message_channel = client.get_channel(southside)
-        else: 
-            message_channel = client.get_channel(other)
-        l = m.text.split("\n")
-        print(l)
         char = 0
         counter = 0
         temp = ''
         flag = 0
+        if m == menuI:
+            message_channel = bot.get_channel(ikes)
+            temp= "Ike's \n"
+        elif m == menuS:
+            message_channel = bot.get_channel(southside)
+            temp= "Southside \n"
+        elif m == menuO: 
+            message_channel = bot.get_channel(other)
+            temp= "SMSC Front Royal Commons \n"
+        l = m.text.split("\n")
+        print(l)
+        
         for i in l:
             for s in temp.split():
                 char += len(s)
@@ -84,8 +113,8 @@ async def called_once_a_day():
     
 @called_once_a_day.before_loop
 async def before():
-    await client.wait_until_ready()
+    await bot.wait_until_ready()
     print ("Finished waiting")
             
 called_once_a_day.start()
-client.run(TOKEN)
+bot.run(TOKEN)
