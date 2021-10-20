@@ -58,7 +58,7 @@ async def frontroyale(ctx):
     menus.append(menuO)
     await ctx.channel.send("Front Royale Common's channel has been set")
 
-@tasks.loop(hours=24.0)
+@tasks.loop(seconds=5.0)
 async def called_once_a_day():
     for m in menus:
         char = 0
@@ -67,13 +67,13 @@ async def called_once_a_day():
         flag = 0
         if m == menuI:
             message_channel = bot.get_channel(ikes)
-            temp= "Ike's \n"
+            temp= "⋯⋯⋯⋯⋯| **Ike's** |⋯⋯⋯⋯⋯ \n"
         elif m == menuS:
             message_channel = bot.get_channel(southside)
-            temp= "Southside \n"
+            temp= "⋯⋯⋯⋯⋯| **Southside** |⋯⋯⋯⋯⋯ \n"
         elif m == menuO: 
             message_channel = bot.get_channel(other)
-            temp= "SMSC Front Royal Commons \n"
+            temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
         l = m.text.split("\n")
         print(l)
         
