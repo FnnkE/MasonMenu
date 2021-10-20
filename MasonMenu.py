@@ -39,8 +39,7 @@ async def on_ready():
 
 @bot.command(name='ikes')
 async def ikes(ctx):
-    global ikes 
-    global ikesFlag 
+    global ikes  
     ikes = ctx.channel.id
     menus.append(menuI)
     await ctx.channel.send("Ike's channel has been set")
@@ -48,7 +47,6 @@ async def ikes(ctx):
 @bot.command(name='southside')
 async def southside(ctx):
     global southside
-    global ssFlag
     southside = ctx.channel.id
     menus.append(menuS)
     await ctx.channel.send("Southside's channel has been set")
@@ -56,7 +54,6 @@ async def southside(ctx):
 @bot.command(name='frontroyale')
 async def frontroyale(ctx):
     global other
-    global otherFlag
     other = ctx.channel.id   
     menus.append(menuO)
     await ctx.channel.send("Front Royale Common's channel has been set")
