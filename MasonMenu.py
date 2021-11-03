@@ -3,6 +3,7 @@ from discord import message
 import requests
 from discord.ext import commands, tasks
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 ikes = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16653&locationId=27747017&whereami=http://masondining.sodexomyway.com/dining-near-me/ikes"
 southside = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locationId=27747003&whereami=http://masondining.sodexomyway.com/dining-near-me/southside"
@@ -33,6 +34,8 @@ ikes = 0
 southside = 0
 other = 0
 
+loop = 24
+
 @bot.event
 async def on_ready():
     print('Bot Online')
@@ -40,26 +43,40 @@ async def on_ready():
 @bot.command(name='ikes')
 async def ikes(ctx):
     global ikes  
+    global loop
     ikes = ctx.channel.id
     menus.append(menuI)
     await ctx.channel.send("Ike's channel has been set")
+    now = datetime.now()
+    hour = now.second
+    loop = 25-hour
 
 @bot.command(name='southside')
 async def southside(ctx):
     global southside
+    global loop
     southside = ctx.channel.id
     menus.append(menuS)
     await ctx.channel.send("Southside's channel has been set")
+    now = datetime.now()
+    hour = now.second
+    loop = 25-hour
 
 @bot.command(name='frontroyale')
 async def frontroyale(ctx):
     global other
+    global loop
     other = ctx.channel.id   
     menus.append(menuO)
     await ctx.channel.send("Front Royale Common's channel has been set")
+    now = datetime.now()
+    hour = now.second
+    loop = 25-hour
 
-@tasks.loop(seconds=5.0)
+@tasks.loop(hours=loop)
 async def called_once_a_day():
+    global loop
+    loop = 60
     for m in menus:
         char = 0
         counter = 0
