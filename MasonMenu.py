@@ -1,3 +1,4 @@
+#Code By FnkE
 import discord
 from discord import Member
 import requests
