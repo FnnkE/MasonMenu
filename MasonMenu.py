@@ -1,7 +1,8 @@
 import discord
-from discord import message
+from discord import Member
 import requests
 from discord.ext import commands, tasks
+from discord.ext.commands import has_permissions, MissingPermissions
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -41,6 +42,7 @@ async def on_ready():
     print('Bot Online')
 
 @bot.command(name='ikes')
+@has_permissions(manage_channels = True)
 async def ikes(ctx):
     global ikes  
     global loop
@@ -48,10 +50,11 @@ async def ikes(ctx):
     menus.append(menuI)
     await ctx.channel.send("Ike's channel has been set")
     now = datetime.now()
-    hour = now.second
+    hour = now.hour
     loop = 25-hour
 
 @bot.command(name='southside')
+@has_permissions(manage_channels = True)
 async def southside(ctx):
     global southside
     global loop
@@ -59,10 +62,11 @@ async def southside(ctx):
     menus.append(menuS)
     await ctx.channel.send("Southside's channel has been set")
     now = datetime.now()
-    hour = now.second
+    hour = now.hour
     loop = 25-hour
 
 @bot.command(name='frontroyale')
+@has_permissions(manage_channels = True)
 async def frontroyale(ctx):
     global other
     global loop
@@ -70,8 +74,15 @@ async def frontroyale(ctx):
     menus.append(menuO)
     await ctx.channel.send("Front Royale Common's channel has been set")
     now = datetime.now()
-    hour = now.second
+    hour = now.hour
     loop = 25-hour
+
+@bot.command(name='time')
+@has_permissions(manage_channels = True)
+async def timeCheck(ctx):
+    message = str(loop) + ' Hours Until Print'
+    await ctx.channel.send(message)
+
 
 @tasks.loop(hours=loop)
 async def called_once_a_day():
@@ -93,7 +104,6 @@ async def called_once_a_day():
             temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
         l = m.text.split("\n")
         print(l)
-        
         for i in l:
             for s in temp.split():
                 char += len(s)
