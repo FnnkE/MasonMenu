@@ -3,6 +3,7 @@ aiohttp==3.7.4.post0
 async-timeout==3.0.1
 attrs==21.2.0
 beautifulsoup4==4.10.0
+boto==2.49.0
 bs4==0.0.1
 certifi==2021.10.8
 chardet==4.0.0
