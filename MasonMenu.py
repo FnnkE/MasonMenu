@@ -6,6 +6,8 @@ from discord.ext import commands, tasks
 from discord.ext.commands import has_permissions, MissingPermissions
 from bs4 import BeautifulSoup
 from datetime import datetime
+from boto.s3.connection import S3Connection
+
 
 #Menu URLs
 ikes = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16653&locationId=27747017&whereami=http://masondining.sodexomyway.com/dining-near-me/ikes"
@@ -32,10 +34,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-data = open('TOKEN.txt', 'r')
-token = data.read()
-data.close()
-TOKEN = token
+TOKEN = S3Connection(os.environ['TOKEN'])
 bot = commands.Bot(command_prefix="$")
 
 #Various Inits
