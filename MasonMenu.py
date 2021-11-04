@@ -5,7 +5,7 @@ import requests
 from discord.ext import commands, tasks
 from discord.ext.commands import has_permissions, MissingPermissions
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timezone
 from boto.s3.connection import S3Connection
 import os
 
@@ -60,7 +60,8 @@ async def ikes(ctx):
     menus.append(menuI) #Add Ikes' Menu to List for Printing
     await ctx.channel.send("Ike's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
-    now = datetime.now()
+    tz = timezone('US/Eastern')
+    now = datetime.now(tz)
     hour = now.hour
     loop = 25-hour
 
@@ -74,7 +75,8 @@ async def southside(ctx):
     menus.append(menuS) #Add Southside's Menu to List for Printing
     await ctx.channel.send("Southside's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
-    now = datetime.now()
+    tz = timezone('US/Eastern')
+    now = datetime.now(tz)
     hour = now.hour
     loop = 25-hour
 
@@ -88,7 +90,8 @@ async def frontroyale(ctx):
     menus.append(menuO) #Add Front Royale's Menu to List for Printing
     await ctx.channel.send("Front Royale Common's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
-    now = datetime.now()
+    tz = timezone('US/Eastern')
+    now = datetime.now(tz)
     hour = now.hour
     loop = 25-hour
 
@@ -96,7 +99,7 @@ async def frontroyale(ctx):
 @bot.command(name='time')
 @has_permissions(manage_channels = True)
 async def timeCheck(ctx):
-    message = str(loop) + ' Hours Until Print'
+    message = str(loop) + ' Hours Until Print \n' + 'ETA: ' + str(25-loop) + ':00'
     await ctx.channel.send(message)
 
 #Run Daily at 1AM
