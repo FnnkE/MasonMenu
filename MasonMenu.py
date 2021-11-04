@@ -1,6 +1,7 @@
 #Code By FnkE
 import discord
 from discord import Member
+from discord import message
 import requests
 from discord.ext import commands, tasks
 from discord.ext.commands import has_permissions, MissingPermissions
@@ -94,6 +95,8 @@ async def frontroyale(ctx):
     now = datetime.now(tz)
     hour = now.hour
     loop = 25-hour
+    message = loop + '= loop' + '\n hour=' + hour
+    await ctx.channel.send(message)
 
 #Run on $time
 @bot.command(name='time')
