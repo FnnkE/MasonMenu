@@ -89,15 +89,15 @@ async def frontroyale(ctx):
     global loop
     other = ctx.channel.id #Get Channel ID
     menus.append(menuO) #Add Front Royale's Menu to List for Printing
-    await ctx.channel.send("Front Royale Common's channel has been set") #Confirm Channel Set
+    
     #Calculate Current Time Till 1AM
     tz = timezone('US/Eastern')
     now = datetime.now(tz)
     hour = now.hour
     loop = 25-hour
     message = loop + '= loop' + '\n hour=' + hour
-    await ctx.channel.send(message)
-
+    await ctx.channel.send("Front Royale Common's channel has been set \n" + message) #Confirm Channel Set
+    
 #Run on $time
 @bot.command(name='time')
 @has_permissions(manage_channels = True)
