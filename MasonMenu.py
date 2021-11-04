@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 from discord.ext.commands import has_permissions, MissingPermissions
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
-from boto.s3.connection import S3Connection
+from pytz import timezone
 import os
 
 
@@ -89,14 +89,12 @@ async def frontroyale(ctx):
     global loop
     other = ctx.channel.id #Get Channel ID
     menus.append(menuO) #Add Front Royale's Menu to List for Printing
-    
+    await ctx.channel.send("Front Royale Common's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
-    tz = timezone('US/Eastern')
+    tz = timezone("US/Eastern")
     now = datetime.now(tz)
     hour = now.hour
     loop = 25-hour
-    message = loop + '= loop' + '\n hour=' + hour
-    await ctx.channel.send("Front Royale Common's channel has been set \n" + message) #Confirm Channel Set
     
 #Run on $time
 @bot.command(name='time')
