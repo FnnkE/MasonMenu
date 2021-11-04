@@ -7,6 +7,7 @@ from discord.ext.commands import has_permissions, MissingPermissions
 from bs4 import BeautifulSoup
 from datetime import datetime
 from boto.s3.connection import S3Connection
+import os
 
 
 #Menu URLs
