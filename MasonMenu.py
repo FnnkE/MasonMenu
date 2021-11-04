@@ -100,7 +100,7 @@ async def frontroyale(ctx):
 @bot.command(name='time')
 @has_permissions(manage_channels = True)
 async def timeCheck(ctx):
-    message = str(loop) + ' Hours Until Print \n' + 'ETA: ' + str(25-loop) + ':00'
+    message = str(loop) + ' Hours Until Print'
     await ctx.channel.send(message)
 
 #Run Daily at 1AM
