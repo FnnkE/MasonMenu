@@ -35,7 +35,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = S3Connection(os.environ['TOKEN'])
+TOKEN = os.getenv("TOKEN", "optional-default")
 bot = commands.Bot(command_prefix="$")
 
 #Various Inits
