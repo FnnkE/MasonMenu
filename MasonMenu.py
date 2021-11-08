@@ -67,6 +67,14 @@ async def ikes(ctx):
     hour = now.hour
     time = 25-hour
 
+@bot.command(name='viewikes')
+@has_permissions(manage_channels = True)
+async def viewIkes(ctx):
+    if ikes == 0:
+        await ctx.channel.send('Ikes channel not set') #Confirm Channel Set
+    else:
+        await ctx.channel.send(ikes)
+
 #Run on $southside
 @bot.command(name='southside')
 @has_permissions(manage_channels = True)
