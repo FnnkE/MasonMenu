@@ -58,7 +58,8 @@ async def ikes(ctx):
     global ikes  
     global loop
     ikes = ctx.channel.id #Get Channel ID
-    menus.append(menuI) #Add Ikes' Menu to List for Printing
+    if menuI in menus == False:
+        menus.append(menuI) #Add Ikes' Menu to List for Printing
     await ctx.channel.send("Ike's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
     tz = timezone('US/Eastern')
@@ -73,7 +74,8 @@ async def southside(ctx):
     global southside
     global loop
     southside = ctx.channel.id #Get Channel ID
-    menus.append(menuS) #Add Southside's Menu to List for Printing
+    if menuS in menus == False:
+        menus.append(menuS) #Add Southside's Menu to List for Printing
     await ctx.channel.send("Southside's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
     tz = timezone('US/Eastern')
@@ -88,7 +90,8 @@ async def frontroyale(ctx):
     global other
     global loop
     other = ctx.channel.id #Get Channel ID
-    menus.append(menuO) #Add Front Royale's Menu to List for Printing
+    if menuO in menus == False:
+        menus.append(menuO) #Add Front Royale's Menu to List for Printing
     await ctx.channel.send("Front Royale Common's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
     tz = timezone("US/Eastern")
@@ -102,6 +105,12 @@ async def frontroyale(ctx):
 async def timeCheck(ctx):
     message = str(loop) + ' Hours Until Print'
     await ctx.channel.send(message)
+
+@bot.command(name='forceprint')
+@has_permissions(manage_channels = True)
+async def forcePrint(ctx):
+    global loop
+    loop = 0
 
 #Run Daily at 1AM
 @tasks.loop(hours=loop)
