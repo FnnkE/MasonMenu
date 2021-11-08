@@ -45,6 +45,7 @@ southside = 0 #Default Channel ID
 other = 0 #Default Channel ID
 menus = []
 loop = 24 #Default Daily Loop
+counter = 60
 
 #Run on Bot Start
 @bot.event
@@ -88,7 +89,7 @@ async def southside(ctx):
 @has_permissions(manage_channels = True)
 async def frontroyale(ctx):
     global other
-    global loop
+    global counter
     other = ctx.channel.id #Get Channel ID
     if menuO in menus == False:
         menus.append(menuO) #Add Front Royale's Menu to List for Printing
@@ -96,8 +97,8 @@ async def frontroyale(ctx):
     #Calculate Current Time Till 1AM
     tz = timezone("US/Eastern")
     now = datetime.now(tz)
-    hour = now.hour
-    loop = 25-hour
+    hour = now.second
+    counter = 60- hour
     
 #Run on $time
 @bot.command(name='time')
@@ -110,64 +111,71 @@ async def timeCheck(ctx):
 @has_permissions(manage_channels = True)
 async def forcePrint(ctx):
     global loop
-    loop = 0
+    global counter
+    counter = 0
+    print('Forcing print')
+
 
 #Run Daily at 1AM
-@tasks.loop(hours=loop)
+@tasks.loop(seconds=1)
 async def called_once_a_day():
     global loop
-    loop = 24 #Reset Loop
-    for m in menus:
-        #Inits
-        char = 0
-        counter = 0
-        temp = ''
-        flag = 0
-        #Print Titles of Menus
-        if m == menuI:
-            message_channel = bot.get_channel(ikes)
-            temp= "⋯⋯⋯⋯⋯| **Ike's** |⋯⋯⋯⋯⋯ \n"
-        elif m == menuS:
-            message_channel = bot.get_channel(southside)
-            temp= "⋯⋯⋯⋯⋯| **Southside** |⋯⋯⋯⋯⋯ \n"
-        elif m == menuO: 
-            message_channel = bot.get_channel(other)
-            temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
-        l = m.text.split("\n")
-        print(l)
-
-        for i in l:
-            #Calc Characters and Send if Needed
-            for s in temp.split():
-                char += len(s)
-            if char >= 1000:
-                await message_channel.send(temp)
-                print (temp)
-                if flag == 1:
-                    temp = '⠀'
-                else:
-                    temp = ''
+    global counter
+    if counter == 0:
+        counter = 60
+        #loop = 24 #Reset Loop
+        for m in menus:
+            #Inits
             char = 0
-            #Adding Text to List Below
-            if i.strip() != '':
-                print(repr(i)) 
-                if i.isupper() == True: #Add Text Decor
-                    if i == 'BREAKFAST' or i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
-                        temp += '\n ━━━***__' + i + '__***━━━ \n'    
+            counter = 0
+            temp = ''
+            flag = 0
+            #Print Titles of Menus
+            if m == menuI:
+                message_channel = bot.get_channel(ikes)
+                temp= "⋯⋯⋯⋯⋯| **Ike's** |⋯⋯⋯⋯⋯ \n"
+            elif m == menuS:
+                message_channel = bot.get_channel(southside)
+                temp= "⋯⋯⋯⋯⋯| **Southside** |⋯⋯⋯⋯⋯ \n"
+            elif m == menuO: 
+                message_channel = bot.get_channel(other)
+                temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
+            l = m.text.split("\n")
+            print(l)
+
+            for i in l:
+                #Calc Characters and Send if Needed
+                for s in temp.split():
+                    char += len(s)
+                if char >= 1000:
+                    await message_channel.send(temp)
+                    print (temp)
+                    if flag == 1:
+                        temp = '⠀'
                     else:
-                        temp += '\n **' + i + '** \n'      
-                elif counter == 0: #I'm going to be honest, i forgot what happens after
-                    flag = 1
-                    if temp == '⠀':
-                        temp += i.strip() + '\n'
-                    else:
-                        temp += '\t' + i.strip() + '\n'
-                    counter += 1
-                elif counter == 1:
-                    flag = 0
-                    counter = 0 
-        if len(temp) > 0 and temp != '⠀':
-            await message_channel.send(temp)
+                        temp = ''
+                char = 0
+                #Adding Text to List Below
+                if i.strip() != '':
+                    print(repr(i)) 
+                    if i.isupper() == True: #Add Text Decor
+                        if i == 'BREAKFAST' or i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
+                            temp += '\n ━━━***__' + i + '__***━━━ \n'    
+                        else:
+                            temp += '\n **' + i + '** \n'      
+                    elif counter == 0: #I'm going to be honest, i forgot what happens after
+                        flag = 1
+                        if temp == '⠀':
+                            temp += i.strip() + '\n'
+                        else:
+                            temp += '\t' + i.strip() + '\n'
+                        counter += 1
+                    elif counter == 1:
+                        flag = 0
+                        counter = 0 
+            if len(temp) > 0 and temp != '⠀':
+                await message_channel.send(temp)
+    counter -= 1
 
 @called_once_a_day.before_loop
 async def before():
