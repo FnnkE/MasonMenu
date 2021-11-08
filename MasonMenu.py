@@ -36,7 +36,10 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
+"""
+TOKEN = os.read("TOKEN")
+"""
+TOKEN = 'ODY4OTQ2Mzk2NDIwNjQwODI4.YP3DZQ.zttad6Mq71vww1iVxqWXtElol6E'
 bot = commands.Bot(command_prefix="$")
 
 #Various Inits
@@ -44,8 +47,7 @@ ikes = 0 #Default Channel ID
 southside = 0 #Default Channel ID
 other = 0 #Default Channel ID
 menus = []
-loop = 24 #Default Daily Loop
-counter = 60
+time = 24
 
 #Run on Bot Start
 @bot.event
@@ -57,73 +59,73 @@ async def on_ready():
 @has_permissions(manage_channels = True)
 async def ikes(ctx):
     global ikes  
-    global loop
+    global time
     ikes = ctx.channel.id #Get Channel ID
-    if menuI in menus == False:
+    if menuI not in menus:
         menus.append(menuI) #Add Ikes' Menu to List for Printing
     await ctx.channel.send("Ike's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
     tz = timezone('US/Eastern')
     now = datetime.now(tz)
     hour = now.hour
-    loop = 25-hour
+    time = 25-hour
 
 #Run on $southside
 @bot.command(name='southside')
 @has_permissions(manage_channels = True)
 async def southside(ctx):
     global southside
-    global loop
+    global time
     southside = ctx.channel.id #Get Channel ID
-    if menuS in menus == False:
+    if menuS not in menus:
         menus.append(menuS) #Add Southside's Menu to List for Printing
     await ctx.channel.send("Southside's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
     tz = timezone('US/Eastern')
     now = datetime.now(tz)
     hour = now.hour
-    loop = 25-hour
+    time = 25-hour
 
 #Run on $frontroyale
 @bot.command(name='frontroyale')
 @has_permissions(manage_channels = True)
 async def frontroyale(ctx):
     global other
-    global counter
+    global time
     other = ctx.channel.id #Get Channel ID
-    if menuO in menus == False:
+    print(menuO in menus)
+    if menuO not in menus:
         menus.append(menuO) #Add Front Royale's Menu to List for Printing
     await ctx.channel.send("Front Royale Common's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
     tz = timezone("US/Eastern")
     now = datetime.now(tz)
-    hour = now.second
-    counter = 60- hour
+    hour = now.hour
+    time = 25-hour
     
 #Run on $time
 @bot.command(name='time')
 @has_permissions(manage_channels = True)
 async def timeCheck(ctx):
-    message = str(loop) + ' Hours Until Print'
+    message = str(time) + ' Hours Until Print'
     await ctx.channel.send(message)
 
 @bot.command(name='forceprint')
 @has_permissions(manage_channels = True)
 async def forcePrint(ctx):
     global loop
-    global counter
-    counter = 0
+    global time
+    time = 0
     print('Forcing print')
 
 
 #Run Daily at 1AM
-@tasks.loop(seconds=1)
+@tasks.loop(hours=1)
 async def called_once_a_day():
     global loop
-    global counter
-    if counter == 0:
-        counter = 60
-        #loop = 24 #Reset Loop
+    global time
+    if time == 0:
+        time = 24 #Reset Loop
         for m in menus:
             #Inits
             char = 0
@@ -141,7 +143,7 @@ async def called_once_a_day():
                 message_channel = bot.get_channel(other)
                 temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
             l = m.text.split("\n")
-            print(l)
+            #print(l)
 
             for i in l:
                 #Calc Characters and Send if Needed
@@ -149,7 +151,7 @@ async def called_once_a_day():
                     char += len(s)
                 if char >= 1000:
                     await message_channel.send(temp)
-                    print (temp)
+                    #print (temp)
                     if flag == 1:
                         temp = '⠀'
                     else:
@@ -157,7 +159,7 @@ async def called_once_a_day():
                 char = 0
                 #Adding Text to List Below
                 if i.strip() != '':
-                    print(repr(i)) 
+                    #print(repr(i)) 
                     if i.isupper() == True: #Add Text Decor
                         if i == 'BREAKFAST' or i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
                             temp += '\n ━━━***__' + i + '__***━━━ \n'    
@@ -175,7 +177,7 @@ async def called_once_a_day():
                         counter = 0 
             if len(temp) > 0 and temp != '⠀':
                 await message_channel.send(temp)
-    counter -= 1
+    time -= 1
 
 @called_once_a_day.before_loop
 async def before():
