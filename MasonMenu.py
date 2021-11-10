@@ -38,7 +38,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.tt9EnW3Fb040RUvSV2nqSckZGAg'#os.getenv("TOKEN")
+TOKEN = os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$")
 
 #Various Inits
@@ -80,11 +80,11 @@ async def ikes(ctx):
     if result is None:
         sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
         val = (ctx.guild.id, ctx.channel.id, 'ikes')
-        await ctx.send(f"Channel has been set to {ctx.channel.mention}")
+        await ctx.send(f"Ike\'s channel has been set to {ctx.channel.mention}")
     elif result is not None:
         sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
         val = (ctx.channel.id, ctx.guild.id, 'ikes')
-        await ctx.send(f"Update... Channel has been set to {ctx.channel.mention}")
+        await ctx.send(f"Ike\'s channel has been updated to {ctx.channel.mention}")
     cursor.execute(sql,val)
     db.commit()
     cursor.close()
@@ -112,10 +112,25 @@ async def viewIkes(ctx):
 async def southside(ctx):
     global southside
     global time
-    southside = ctx.channel.id #Get Channel ID
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'southside'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (ctx.guild.id, ctx.channel.id, 'southside')
+        await ctx.send(f"Southside channel has been set to {ctx.channel.mention}")
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (ctx.channel.id, ctx.guild.id, 'southside')
+        await ctx.send(f"Southside channel has been updated to {ctx.channel.mention}")
+    cursor.execute(sql,val)
+    db.commit()
+    cursor.close()
+    db.close()
+    print('A channel for Southside set')
     if menuS not in menus:
         menus.append(menuS) #Add Southside's Menu to List for Printing
-    await ctx.channel.send("Southside's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
     tz = timezone('US/Eastern')
     now = datetime.now(tz)
@@ -128,10 +143,25 @@ async def southside(ctx):
 async def frontroyale(ctx):
     global other
     global time
-    other = ctx.channel.id #Get Channel ID
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'other'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (ctx.guild.id, ctx.channel.id, 'other')
+        await ctx.send(f"Front Royale channel has been set to {ctx.channel.mention}")
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (ctx.channel.id, ctx.guild.id, 'other')
+        await ctx.send(f"Front Royale channel has been updated to {ctx.channel.mention}")
+    cursor.execute(sql,val)
+    db.commit()
+    cursor.close()
+    db.close()
+    print('A channel for Other set')
     if menuO not in menus:
         menus.append(menuO) #Add Front Royale's Menu to List for Printing
-    await ctx.channel.send("Front Royale Common's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
     tz = timezone("US/Eastern")
     now = datetime.now(tz)
