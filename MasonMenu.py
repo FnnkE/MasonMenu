@@ -38,7 +38,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
+TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.tt9EnW3Fb040RUvSV2nqSckZGAg'#os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$")
 
 #Various Inits
@@ -51,6 +51,8 @@ time = 24
 #Run on Bot Start
 @bot.event
 async def on_ready():
+    """
+    Initializing main db
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
     cursor.execute('''
@@ -60,6 +62,7 @@ async def on_ready():
         name TEXT
         )
     ''')
+    """
     print('Bot Online')
     
     return await bot.change_presence(activity=discord.Streaming(name="Bot Things", url='https://www.twitch.tv/fnke'))
@@ -72,20 +75,21 @@ async def ikes(ctx):
     global time
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} WHERE name = ikes")
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'ikes'")
     result = cursor.fetchone()
     if result is None:
         sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (ctx.guild.id, channel.id, 'ikes')
-        await ctx.send(f"Channel has been set to {channel.mention}")
+        val = (ctx.guild.id, ctx.channel.id, 'ikes')
+        await ctx.send(f"Channel has been set to {ctx.channel.mention}")
     elif result is not None:
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? WHERE name = ikes")
-        val = (channel.id, ctx.guild.id, 'ikes')
-        await ctx.send(f"Update... Channel has been set to {channel.mention}")
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (ctx.channel.id, ctx.guild.id, 'ikes')
+        await ctx.send(f"Update... Channel has been set to {ctx.channel.mention}")
     cursor.execute(sql,val)
     db.commit()
     cursor.close()
     db.close()
+    print('A channel for Ike\'s set')
     if menuI not in menus:
         menus.append(menuI) #Add Ikes' Menu to List for Printing
     #Calculate Current Time Till 1AM
