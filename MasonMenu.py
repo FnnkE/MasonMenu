@@ -2,6 +2,7 @@
 import discord
 from discord import Member
 from discord import message
+from discord import channel
 import requests
 from discord.ext import commands, tasks
 from discord.ext.commands import has_permissions, MissingPermissions
@@ -9,6 +10,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from pytz import timezone
 import os
+import sqlite3
 
 
 #Menu URLs
@@ -49,7 +51,18 @@ time = 24
 #Run on Bot Start
 @bot.event
 async def on_ready():
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS main(
+        guild_id TEXT,
+        channel_id TEXT,
+        name TEXT
+        )
+    ''')
     print('Bot Online')
+    
+    return await bot.change_presence(activity=discord.Streaming(name="Bot Things", url='https://www.twitch.tv/fnke'))
 
 #Run on $ikes
 @bot.command(name='ikes')
@@ -57,10 +70,24 @@ async def on_ready():
 async def ikes(ctx):
     global ikes  
     global time
-    ikes = ctx.channel.id #Get Channel ID
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} WHERE name = ikes")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (ctx.guild.id, channel.id, 'ikes')
+        await ctx.send(f"Channel has been set to {channel.mention}")
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? WHERE name = ikes")
+        val = (channel.id, ctx.guild.id, 'ikes')
+        await ctx.send(f"Update... Channel has been set to {channel.mention}")
+    cursor.execute(sql,val)
+    db.commit()
+    cursor.close()
+    db.close()
     if menuI not in menus:
         menus.append(menuI) #Add Ikes' Menu to List for Printing
-    await ctx.channel.send("Ike's channel has been set") #Confirm Channel Set
     #Calculate Current Time Till 1AM
     tz = timezone('US/Eastern')
     now = datetime.now(tz)
@@ -98,7 +125,6 @@ async def frontroyale(ctx):
     global other
     global time
     other = ctx.channel.id #Get Channel ID
-    print(menuO in menus)
     if menuO not in menus:
         menus.append(menuO) #Add Front Royale's Menu to List for Printing
     await ctx.channel.send("Front Royale Common's channel has been set") #Confirm Channel Set
@@ -129,7 +155,28 @@ async def forcePrint(ctx):
 async def called_once_a_day():
     global loop
     global time
+    global menuI
+    global menuS
+    global menuO
+    global menus
+
+    time -= 1
     if time == 0:
+        if menuI in menus:
+            menus.remove(menuI)
+            soupI = BeautifulSoup(ikesP.content, "lxml")
+            menuI = soupI.find("div", id=idCurrent)
+            menus.append(menuI)
+        if menuS in menus:
+            menus.remove(menuS)
+            soupS = BeautifulSoup(ssP.content, "lxml")
+            menuS = soupS.find("div", id=idCurrent)
+            menus.append(menuS)
+        if menuO in menus:
+            menus.remove(menuO)
+            soupO = BeautifulSoup(otherP.content, "lxml")
+            menuO = soupS.find("div", id=idCurrent)
+            menus.append(menuO)
         time = 24 #Reset Loop
         for m in menus:
             #Inits
@@ -182,7 +229,6 @@ async def called_once_a_day():
                         counter = 0 
             if len(temp) > 0 and temp != '⠀':
                 await message_channel.send(temp)
-    time -= 1
 
 @called_once_a_day.before_loop
 async def before():
