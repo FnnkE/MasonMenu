@@ -38,15 +38,15 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
+TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.5BS9lQj7yDmlrV_gTxhIjpn2xRA'#os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$")
 
 #Various Inits
 ikes = 0 #Default Channel ID
 southside = 0 #Default Channel ID
 other = 0 #Default Channel ID
-menus = []
-time = 24
+menus = [menuI, menuS, menuO]
+time = 1
 
 #Run on Bot Start
 @bot.event
@@ -65,7 +65,7 @@ async def on_ready():
     """
     print('Bot Online')
     
-    return await bot.change_presence(activity=discord.Streaming(name="Bot Things", url='https://www.twitch.tv/fnke'))
+    return await bot.change_presence(activity=discord.Streaming(name="Bot Things", url='https://github.com/fnk-E/MasonMenu'))
 
 #Run on $ikes
 @bot.command(name='ikes')
@@ -185,7 +185,7 @@ async def forcePrint(ctx):
 
 
 #Run Daily at 1AM
-@tasks.loop(hours=1)
+@tasks.loop(seconds=10)
 async def called_once_a_day():
     global loop
     global time
@@ -196,6 +196,7 @@ async def called_once_a_day():
 
     time -= 1
     if time == 0:
+        print('Printing')
         if menuI in menus:
             menus.remove(menuI)
             soupI = BeautifulSoup(ikesP.content, "lxml")
@@ -209,28 +210,41 @@ async def called_once_a_day():
         if menuO in menus:
             menus.remove(menuO)
             soupO = BeautifulSoup(otherP.content, "lxml")
-            menuO = soupS.find("div", id=idCurrent)
+            menuO = soupO.find("div", id=idCurrent)
             menus.append(menuO)
         time = 24 #Reset Loop
-        for m in menus:
+        db = sqlite3.connect('main.sqlite')
+        cursor = db.cursor()
+        result = cursor.execute("SELECT * FROM main")
+        data = result.fetchall()
+        for d in data:
             #Inits
             char = 0
             counter = 0
             temp = ''
             flag = 0
             #Print Titles of Menus
-            if m == menuI:
-                message_channel = bot.get_channel(ikes)
+            print(d)
+            if d[2] == 'ikes':
+                channelID = int(d[1])
+                message_channel = bot.get_channel(channelID)
+                print(message_channel)
                 temp= "⋯⋯⋯⋯⋯| **Ike's** |⋯⋯⋯⋯⋯ \n"
-            elif m == menuS:
-                message_channel = bot.get_channel(southside)
+                m = menuI
+            elif d[2] == 'southside':
+                channelID = int(d[1])
+                message_channel = bot.get_channel(channelID)
+                print(message_channel)
                 temp= "⋯⋯⋯⋯⋯| **Southside** |⋯⋯⋯⋯⋯ \n"
-            elif m == menuO: 
-                message_channel = bot.get_channel(other)
+                m = menuS
+            elif d[2] == 'other': 
+                channelID = int(d[1])
+                message_channel = bot.get_channel(channelID)
+                print(message_channel)
                 temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
+                m = menuO
             l = m.text.split("\n")
             #print(l)
-
             for i in l:
                 #Calc Characters and Send if Needed
                 for s in temp.split():
@@ -263,6 +277,9 @@ async def called_once_a_day():
                         counter = 0 
             if len(temp) > 0 and temp != '⠀':
                 await message_channel.send(temp)
+        db.commit()
+        cursor.close()
+        db.close()
 
 @called_once_a_day.before_loop
 async def before():
