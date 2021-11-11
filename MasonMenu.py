@@ -175,6 +175,18 @@ async def timeCheck(ctx):
     message = str(time) + ' Hours Until Print'
     await ctx.channel.send(message)
 
+@bot.command(name='help')
+@has_permissions(manage_channels = True)
+async def help(ctx):
+    message = '''
+    Commands - \n
+        **$ikes** - Set channel to print Ike's menu \n
+        **$southside** - Set channel to print Southside's menu \n
+        **$frontroyale** - Set channel to print Front Royale Common's menu \n
+        **$time** - Check how long until next print (Rough hour estimate)
+    '''
+    await ctx.channel.send(message)
+
 @bot.command(name='forceprint')
 @has_permissions(manage_channels = True)
 async def forcePrint(ctx):
