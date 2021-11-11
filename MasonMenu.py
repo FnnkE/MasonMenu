@@ -38,7 +38,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.5BS9lQj7yDmlrV_gTxhIjpn2xRA'#os.getenv("TOKEN")
+TOKEN = os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$")
 
 #Various Inits
@@ -46,7 +46,7 @@ ikes = 0 #Default Channel ID
 southside = 0 #Default Channel ID
 other = 0 #Default Channel ID
 menus = [menuI, menuS, menuO]
-time = 1
+time = 24
 
 #Run on Bot Start
 @bot.event
@@ -65,7 +65,7 @@ async def on_ready():
     """
     print('Bot Online')
     
-    return await bot.change_presence(activity=discord.Streaming(name="Bot Things", url='https://www.twitch.tv/fnke'))
+    return await bot.change_presence(activity=discord.Streaming(name="Bot Things", url='https://github.com/fnk-E/MasonMenu'))
 
 #Run on $ikes
 @bot.command(name='ikes')
@@ -175,6 +175,18 @@ async def timeCheck(ctx):
     message = str(time) + ' Hours Until Print'
     await ctx.channel.send(message)
 
+@bot.command(name='help')
+@has_permissions(manage_channels = True)
+async def help(ctx):
+    message = '''
+    Commands - \n
+        **$ikes** - Set channel to print Ike's menu \n
+        **$southside** - Set channel to print Southside's menu \n
+        **$frontroyale** - Set channel to print Front Royale Common's menu \n
+        **$time** - Check how long until next print (Rough hour estimate)
+    '''
+    await ctx.channel.send(message)
+
 @bot.command(name='forceprint')
 @has_permissions(manage_channels = True)
 async def forcePrint(ctx):
@@ -185,7 +197,7 @@ async def forcePrint(ctx):
 
 
 #Run Daily at 1AM
-@tasks.loop(seconds=10)
+@tasks.loop(hours=1)
 async def called_once_a_day():
     global loop
     global time
