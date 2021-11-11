@@ -65,7 +65,7 @@ async def on_ready():
     """
     print('Bot Online')
     
-    return await bot.change_presence(activity=discord.Streaming(name="Bot Things", url='https://github.com/fnk-E/MasonMenu'))
+    return await bot.change_presence(activity=discord.Streaming(name="Bot Things", url='https://www.twitch.tv/fnke'))
 
 #Run on $ikes
 @bot.command(name='ikes')
@@ -173,18 +173,6 @@ async def frontroyale(ctx):
 @has_permissions(manage_channels = True)
 async def timeCheck(ctx):
     message = str(time) + ' Hours Until Print'
-    await ctx.channel.send(message)
-
-@bot.command(name='help')
-@has_permissions(manage_channels = True)
-async def help(ctx):
-    message = '''
-    Commands - \n
-        **$ikes** - Set channel to print Ike's menu \n
-        **$southside** - Set channel to print Southside's menu \n
-        **$frontroyale** - Set channel to print Front Royale Common's menu \n
-        **$time** - Check how long until next print (Rough hour estimate)
-    '''
     await ctx.channel.send(message)
 
 @bot.command(name='forceprint')
