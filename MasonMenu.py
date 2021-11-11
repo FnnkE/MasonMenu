@@ -175,6 +175,7 @@ async def timeCheck(ctx):
     message = str(time) + ' Hours Until Print'
     await ctx.channel.send(message)
 
+"""
 @bot.command(name='help')
 @has_permissions(manage_channels = True)
 async def help(ctx):
@@ -186,6 +187,7 @@ async def help(ctx):
         **$time** - Check how long until next print (Rough hour estimate)
     '''
     await ctx.channel.send(message)
+"""
 
 @bot.command(name='forceprint')
 @has_permissions(manage_channels = True)
