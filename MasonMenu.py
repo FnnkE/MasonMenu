@@ -5,7 +5,7 @@ from discord import message
 from discord import channel
 import requests
 from discord.ext import commands, tasks
-from discord.ext.commands import has_permissions, MissingPermissions
+from discord.ext.commands import has_permissions
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from pytz import timezone
@@ -38,15 +38,32 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
-bot = commands.Bot(command_prefix="$")
+TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.so3BOjnOqXn4I-A45mz-0LsA5qc'#os.getenv("TOKEN")
+bot = commands.Bot(command_prefix="$", case_insesitive=True)
 
 #Various Inits
 ikes = 0 #Default Channel ID
 southside = 0 #Default Channel ID
 other = 0 #Default Channel ID
 menus = [menuI, menuS, menuO]
-time = 24
+tz = timezone('US/Eastern')
+now = datetime.now(tz)
+hour = now.hour
+time = 25-hour
+db = sqlite3.connect('main.sqlite')
+cursor = db.cursor()
+cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system.hour'")
+result = cursor.fetchone()
+if result is None:
+    sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+    val = (0, time, 'system.hour')
+elif result is not None:
+    sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+    val = (time, 0, 'system.hour')
+cursor.execute(sql,val)
+db.commit()
+cursor.close()
+db.close()
 
 #Run on Bot Start
 @bot.event
@@ -65,7 +82,7 @@ async def on_ready():
     """
     print('Bot Online')
     
-    return await bot.change_presence(activity=discord.Streaming(name="Bot Things", url='https://github.com/fnk-E/MasonMenu'))
+    return await bot.change_presence(activity=discord.Game(name='Bot Things'))
 
 #Run on $ikes
 @bot.command(name='ikes')
@@ -86,9 +103,6 @@ async def ikes(ctx):
         val = (ctx.channel.id, ctx.guild.id, 'ikes')
         await ctx.send(f"Ike\'s channel has been updated to {ctx.channel.mention}")
     cursor.execute(sql,val)
-    db.commit()
-    cursor.close()
-    db.close()
     print('A channel for Ike\'s set')
     if menuI not in menus:
         menus.append(menuI) #Add Ikes' Menu to List for Printing
@@ -97,6 +111,18 @@ async def ikes(ctx):
     now = datetime.now(tz)
     hour = now.hour
     time = 25-hour
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (0, time, 'system')
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (time, 0, 'system')
+    cursor.execute(sql,val)
+    db.commit()
+    cursor.close()
+    db.close()
 
 @bot.command(name='viewikes')
 @has_permissions(manage_channels = True)
@@ -125,9 +151,6 @@ async def southside(ctx):
         val = (ctx.channel.id, ctx.guild.id, 'southside')
         await ctx.send(f"Southside channel has been updated to {ctx.channel.mention}")
     cursor.execute(sql,val)
-    db.commit()
-    cursor.close()
-    db.close()
     print('A channel for Southside set')
     if menuS not in menus:
         menus.append(menuS) #Add Southside's Menu to List for Printing
@@ -136,6 +159,18 @@ async def southside(ctx):
     now = datetime.now(tz)
     hour = now.hour
     time = 25-hour
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (0, time, 'system')
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (time, 0, 'system')
+    cursor.execute(sql,val)
+    db.commit()
+    cursor.close()
+    db.close()
 
 #Run on $frontroyale
 @bot.command(name='frontroyale')
@@ -156,23 +191,45 @@ async def frontroyale(ctx):
         val = (ctx.channel.id, ctx.guild.id, 'other')
         await ctx.send(f"Front Royale channel has been updated to {ctx.channel.mention}")
     cursor.execute(sql,val)
-    db.commit()
-    cursor.close()
-    db.close()
     print('A channel for Other set')
     if menuO not in menus:
         menus.append(menuO) #Add Front Royale's Menu to List for Printing
     #Calculate Current Time Till 1AM
     tz = timezone("US/Eastern")
     now = datetime.now(tz)
-    hour = now.hour
     time = 25-hour
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (0, time, 'system')
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (time, 0, 'system')
+    cursor.execute(sql,val)
+    db.commit()
+    cursor.close()
+    db.close()
     
 #Run on $time
 @bot.command(name='time')
 @has_permissions(manage_channels = True)
 async def timeCheck(ctx):
-    message = str(time) + ' Hours Until Print'
+    print('checking time')
+    message=''
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        message = 'Error: Time not set'
+    elif result is not None:
+        for c in result:
+            if c.isnumeric() == True:
+                message += c
+        message += ' hours until next print'
+    cursor.close()
+    db.close()
     await ctx.channel.send(message)
 
 """
@@ -197,10 +254,9 @@ async def forcePrint(ctx):
     time = 0
     print('Forcing print')
 
-
 #Run Daily at 1AM
 @tasks.loop(hours=1)
-async def called_once_a_day():
+async def calledPerDay():
     global loop
     global time
     global menuI
@@ -213,16 +269,19 @@ async def called_once_a_day():
         print('Printing')
         if menuI in menus:
             menus.remove(menuI)
+            ikesP = requests.get(ikes)
             soupI = BeautifulSoup(ikesP.content, "lxml")
             menuI = soupI.find("div", id=idCurrent)
             menus.append(menuI)
         if menuS in menus:
             menus.remove(menuS)
+            ssP = requests.get(southside)
             soupS = BeautifulSoup(ssP.content, "lxml")
             menuS = soupS.find("div", id=idCurrent)
             menus.append(menuS)
         if menuO in menus:
             menus.remove(menuO)
+            otherP = requests.get(other)
             soupO = BeautifulSoup(otherP.content, "lxml")
             menuO = soupO.find("div", id=idCurrent)
             menus.append(menuO)
@@ -295,10 +354,9 @@ async def called_once_a_day():
         cursor.close()
         db.close()
 
-@called_once_a_day.before_loop
+@calledPerDay.before_loop
 async def before():
     await bot.wait_until_ready()
-    print ("Finished waiting")
             
-called_once_a_day.start()
+calledPerDay.start()
 bot.run(TOKEN)
