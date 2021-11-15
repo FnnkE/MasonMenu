@@ -14,14 +14,14 @@ import sqlite3
 
 
 #Menu URLs
-ikes = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16653&locationId=27747017&whereami=http://masondining.sodexomyway.com/dining-near-me/ikes"
-southside = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locationId=27747003&whereami=http://masondining.sodexomyway.com/dining-near-me/southside"
-other = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
+ikesURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16653&locationId=27747017&whereami=http://masondining.sodexomyway.com/dining-near-me/ikes"
+southsideURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locationId=27747003&whereami=http://masondining.sodexomyway.com/dining-near-me/southsideURL"
+otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
 
 #Get Pages
-ikesP = requests.get(ikes)
-ssP = requests.get(southside)
-otherP = requests.get(other)
+ikesP = requests.get(ikesURL)
+ssP = requests.get(southsideURL)
+otherP = requests.get(otherURL)
 
 #Convert Pages
 soupI = BeautifulSoup(ikesP.content, "lxml")
@@ -42,14 +42,15 @@ TOKEN = os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$", case_insesitive=True)
 
 #Various Inits
-ikes = 0 #Default Channel ID
-southside = 0 #Default Channel ID
-other = 0 #Default Channel ID
+ikesC = 0 #Default Channel ID
+southsideC = 0 #Default Channel ID
+otherC = 0 #Default Channel ID
 menus = [menuI, menuS, menuO]
 tz = timezone('US/Eastern')
 now = datetime.now(tz)
 hour = now.hour
 time = 25-hour
+print(str(time) + ': initial hours till print')
 db = sqlite3.connect('main.sqlite')
 cursor = db.cursor()
 cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system.hour'")
@@ -88,7 +89,6 @@ async def on_ready():
 @bot.command(name='ikes')
 @has_permissions(manage_channels = True)
 async def ikes(ctx):
-    global ikes  
     global time
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
@@ -124,19 +124,21 @@ async def ikes(ctx):
     cursor.close()
     db.close()
 
+'''
+--NOT WORKING-- needs SQL update
 @bot.command(name='viewikes')
 @has_permissions(manage_channels = True)
 async def viewIkes(ctx):
-    if ikes == 0:
+    if ikesC == 0:
         await ctx.channel.send('Ikes channel not set') #Confirm Channel Set
     else:
-        await ctx.channel.send(ikes)
+        await ctx.channel.send(ikesC)
+'''
 
 #Run on $southside
 @bot.command(name='southside')
 @has_permissions(manage_channels = True)
 async def southside(ctx):
-    global southside
     global time
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
@@ -176,7 +178,6 @@ async def southside(ctx):
 @bot.command(name='frontroyale')
 @has_permissions(manage_channels = True)
 async def frontroyale(ctx):
-    global other
     global time
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
@@ -257,37 +258,49 @@ async def forcePrint(ctx):
 #Run Daily at 1AM
 @tasks.loop(hours=1)
 async def calledPerDay():
-    global loop
     global time
     global menuI
     global menuS
     global menuO
     global menus
-
+    print(str(time) + ' hours left')
+    #Put time var on SQL database
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        message = 'Error: Time not set'
+    elif result is not None:
+        for c in result:
+            if c.isnumeric() == True:
+                time = c
+    print(message)
     time -= 1
     if time == 0:
-        print('Printing')
+        #Check if requests are updating
         if menuI in menus:
             menus.remove(menuI)
-            ikesP = requests.get(ikes)
+            ikesP = requests.get(ikesURL)
             soupI = BeautifulSoup(ikesP.content, "lxml")
             menuI = soupI.find("div", id=idCurrent)
             menus.append(menuI)
+            print('Ike\'s updated')
         if menuS in menus:
             menus.remove(menuS)
-            ssP = requests.get(southside)
+            ssP = requests.get(southsideURL)
             soupS = BeautifulSoup(ssP.content, "lxml")
             menuS = soupS.find("div", id=idCurrent)
             menus.append(menuS)
+            print('Southside updated')
         if menuO in menus:
             menus.remove(menuO)
-            otherP = requests.get(other)
+            otherP = requests.get(otherURL)
             soupO = BeautifulSoup(otherP.content, "lxml")
             menuO = soupO.find("div", id=idCurrent)
             menus.append(menuO)
-        time = 24 #Reset Loop
-        db = sqlite3.connect('main.sqlite')
-        cursor = db.cursor()
+            print('Other updated')
+        time = 24 #Reset Loop - SQL update
         result = cursor.execute("SELECT * FROM main")
         data = result.fetchall()
         for d in data:
@@ -296,8 +309,8 @@ async def calledPerDay():
             counter = 0
             temp = ''
             flag = 0
-            #Print Titles of Menus
             print(d)
+            #Print Titles of Menus
             if d[2] == 'ikes':
                 channelID = int(d[1])
                 message_channel = bot.get_channel(channelID)
@@ -350,9 +363,17 @@ async def calledPerDay():
                         counter = 0 
             if len(temp) > 0 and temp != '⠀':
                 await message_channel.send(temp)
-        db.commit()
-        cursor.close()
-        db.close()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (0, time, 'system')
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (time, 0, 'system')
+    cursor.execute(sql,val)
+    cursor.close()
+    db.close()
 
 @calledPerDay.before_loop
 async def before():
