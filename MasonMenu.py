@@ -53,14 +53,14 @@ time = 25-hour
 print(str(time) + ': initial hours till print')
 db = sqlite3.connect('main.sqlite')
 cursor = db.cursor()
-cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system.hour'")
+cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
 result = cursor.fetchone()
 if result is None:
     sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-    val = (0, time, 'system.hour')
+    val = (0, time, 'system')
 elif result is not None:
     sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-    val = (time, 0, 'system.hour')
+    val = (time, 0, 'system')
 cursor.execute(sql,val)
 db.commit()
 cursor.close()
