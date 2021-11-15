@@ -39,7 +39,7 @@ menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
 TOKEN = os.getenv("TOKEN")
-bot = commands.Bot(command_prefix="$", help_command=None, case_insesitive=True)
+bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
 ikesC = 0 #Default Channel ID
