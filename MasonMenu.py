@@ -275,7 +275,7 @@ async def calledPerDay():
     elif result is not None:
         for c in result:
             if c.isnumeric() == True:
-                time = c
+                time = int(c)
     time -= 1
     if time == 0:
         #Check if requests are updating
