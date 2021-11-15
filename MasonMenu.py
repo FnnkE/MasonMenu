@@ -271,11 +271,11 @@ async def calledPerDay():
     result = cursor.fetchone()
     if result is None:
         message = 'Error: Time not set'
+        print(message)
     elif result is not None:
         for c in result:
             if c.isnumeric() == True:
                 time = c
-    print(message)
     time -= 1
     if time == 0:
         #Check if requests are updating
