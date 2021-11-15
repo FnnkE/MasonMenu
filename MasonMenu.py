@@ -39,7 +39,7 @@ menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
 TOKEN = os.getenv("TOKEN")
-bot = commands.Bot(command_prefix="$", case_insesitive=True)
+bot = commands.Bot(command_prefix="$", help_command=None, case_insesitive=True)
 
 #Various Inits
 ikesC = 0 #Default Channel ID
@@ -124,16 +124,21 @@ async def ikes(ctx):
     cursor.close()
     db.close()
 
-'''
---NOT WORKING-- needs SQL update
 @bot.command(name='viewikes')
 @has_permissions(manage_channels = True)
 async def viewIkes(ctx):
-    if ikesC == 0:
-        await ctx.channel.send('Ikes channel not set') #Confirm Channel Set
-    else:
-        await ctx.channel.send(ikesC)
-'''
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'ikes'")
+    result = cursor.fetchone()
+    if result is None:
+        await ctx.send('Ike\'s channel has not be set')
+    elif result is not None:
+        channelID = int(result[0])
+        await ctx.channel.send("Ike\'s channel set to <#{}>".format(channelID))
+    cursor.close()
+    db.close()
+
 
 #Run on $southside
 @bot.command(name='southside')
@@ -174,6 +179,22 @@ async def southside(ctx):
     cursor.close()
     db.close()
 
+    
+@bot.command(name='viewsouthside')
+@has_permissions(manage_channels = True)
+async def viewSS(ctx):
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'southside'")
+    result = cursor.fetchone()
+    if result is None:
+        await ctx.send('Southside\'s channel has not be set')
+    elif result is not None:
+        channelID = int(result[0])
+        await ctx.channel.send("Southside\'s channel set to <#{}>".format(channelID))
+    cursor.close()
+    db.close()
+
 #Run on $frontroyale
 @bot.command(name='frontroyale')
 @has_permissions(manage_channels = True)
@@ -211,6 +232,21 @@ async def frontroyale(ctx):
     db.commit()
     cursor.close()
     db.close()
+
+@bot.command(name='viewfrontroyale')
+@has_permissions(manage_channels = True)
+async def viewOther(ctx):
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'other'")
+    result = cursor.fetchone()
+    if result is None:
+        await ctx.send('Front Royale\'s channel has not be set')
+    elif result is not None:
+        channelID = int(result[0])
+        await ctx.channel.send("Front Royale\'s channel set to <#{}>".format(channelID))
+    cursor.close()
+    db.close()
     
 #Run on $time
 @bot.command(name='time')
@@ -233,19 +269,18 @@ async def timeCheck(ctx):
     db.close()
     await ctx.channel.send(message)
 
-"""
 @bot.command(name='help')
 @has_permissions(manage_channels = True)
 async def help(ctx):
-    message = '''
-    Commands - \n
-        **$ikes** - Set channel to print Ike's menu \n
-        **$southside** - Set channel to print Southside's menu \n
-        **$frontroyale** - Set channel to print Front Royale Common's menu \n
-        **$time** - Check how long until next print (Rough hour estimate)
-    '''
+    message = """   Commands - \n
+                    **$ikes** - Set channel to print Ike\'s menu \n
+                    **$southside** - Set channel to print Southside\'s menu \n
+                    **$frontroyale** - Set channel to print Front Royale Common\'s menu \n
+                    **$time** - Check how long until next print (Rough hour estimate) \n
+                    **$viewikes** - View the channel where Ike\'s has been set to \n
+                    **$viewsouthside** - View the channel where Southside\'s has been set to \n
+                    **$viewikes** - View the channel where Front Royales\'s has been set to"""
     await ctx.channel.send(message)
-"""
 
 @bot.command(name='forceprint')
 @has_permissions(manage_channels = True)
