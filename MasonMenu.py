@@ -38,7 +38,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
+TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.jk8GK_WHndDkFq9Pyad-7Ez4EFM'#os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -312,6 +312,9 @@ async def calledPerDay():
             if c.isnumeric() == True:
                 time = int(c)
     time -= 1
+    sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+    val = (time, 0, 'system')
+    cursor.execute(sql,val)
     if time == 0:
         #Check if requests are updating
         if menuI in menus:
@@ -336,6 +339,9 @@ async def calledPerDay():
             menus.append(menuO)
             print('Other updated')
         time = 24 #Reset Loop - SQL update
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (time, 0, 'system')
+        cursor.execute(sql,val)
         result = cursor.execute("SELECT * FROM main")
         data = result.fetchall()
         for d in data:
@@ -407,6 +413,7 @@ async def calledPerDay():
         sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
         val = (time, 0, 'system')
     cursor.execute(sql,val)
+    db.commit()
     cursor.close()
     db.close()
 
