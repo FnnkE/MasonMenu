@@ -38,7 +38,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
+TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.Cw9xR1EyT3sx8B09wZlAaTCJgZs'#os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -139,6 +139,25 @@ async def viewIkes(ctx):
     cursor.close()
     db.close()
 
+@bot.command(name='rmikes')
+@has_permissions(manage_channels = True)
+async def rmIkes(ctx):
+    global time
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'ikes'")
+    result = cursor.fetchone()
+    if result is None:
+        await ctx.send(f"Ike\'s channel has not been set")
+    elif result is not None:
+        sql = ("DELETE FROM main WHERE channel_id = ? AND guild_id = ? AND name = ?")
+        val = (ctx.channel.id, ctx.guild.id, 'ikes')
+        await ctx.send(f"Ike\'s channel has been removed")
+    cursor.execute(sql,val)
+    print('A channel for Ike\'s has been removed')
+    db.commit()
+    cursor.close()
+    db.close()
 
 #Run on $southside
 @bot.command(name='southside')
@@ -195,6 +214,26 @@ async def viewSS(ctx):
     cursor.close()
     db.close()
 
+@bot.command(name='rmsouthside')
+@has_permissions(manage_channels = True)
+async def rmSS(ctx):
+    global time
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'southside'")
+    result = cursor.fetchone()
+    if result is None:
+        await ctx.send(f"Southside\'s channel has not been set")
+    elif result is not None:
+        sql = ("DELETE FROM main WHERE channel_id = ? AND guild_id = ? AND name = ?")
+        val = (ctx.channel.id, ctx.guild.id, 'southside')
+        await ctx.send(f"Southside\'s channel has been removed")
+    cursor.execute(sql,val)
+    print('A channel for Southside has been removed')
+    db.commit()
+    cursor.close()
+    db.close()
+
 #Run on $frontroyale
 @bot.command(name='frontroyale')
 @has_permissions(manage_channels = True)
@@ -247,7 +286,27 @@ async def viewOther(ctx):
         await ctx.channel.send("Front Royale\'s channel set to <#{}>".format(channelID))
     cursor.close()
     db.close()
-    
+
+@bot.command(name='rmfrontroyale')
+@has_permissions(manage_channels = True)
+async def rmOther(ctx):
+    global time
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'other'")
+    result = cursor.fetchone()
+    if result is None:
+        await ctx.send(f"Front Royale\'s channel has not been set")
+    elif result is not None:
+        sql = ("DELETE FROM main WHERE channel_id = ? AND guild_id = ? AND name = ?")
+        val = (ctx.channel.id, ctx.guild.id, 'other')
+        await ctx.send(f"Front Royale\'s channel has been removed")
+    cursor.execute(sql,val)
+    print('A channel for Other has been removed')
+    db.commit()
+    cursor.close()
+    db.close()
+
 #Run on $time
 @bot.command(name='time')
 @has_permissions(manage_channels = True)
@@ -279,7 +338,10 @@ async def help(ctx):
                     **$time** - Check how long until next print (Rough hour estimate) \n
                     **$viewikes** - View the channel where Ike\'s has been set to \n
                     **$viewsouthside** - View the channel where Southside\'s has been set to \n
-                    **$viewikes** - View the channel where Front Royales\'s has been set to"""
+                    **$viewikes** - View the channel where Front Royales\'s has been set to \n
+                    **$rmIkes** - Remove the channel where Ike\'s has been set to \n
+                    **$rmSouthside** - Remove the channel where Southside has been set to \n
+                    **$rmFrontRoyale** - Remove the channel where Front Royale has been set to \n"""
     await ctx.channel.send(message)
 
 @bot.command(name='forceprint')
