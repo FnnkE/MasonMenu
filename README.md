@@ -1,7 +1,7 @@
 # MasonMenu
 
 ## ABOUT:
-MasonMenu is a student project started in October of 2021. This is not an official George Mason Discord bot. The purpose of the bot is to print the various menus of the dining halls at GMU. These include Ike's, Southside, and Front Royale Commons. If you would like to include the bot on your server, contact information can be found below.
+MasonMenu is a student project started in October of 2021 that is currently in development. This is not an official George Mason Discord bot. The purpose of the bot is to print the various menus of the dining halls at GMU. These include Ike's, Southside, and Front Royale Commons. If you would like to include the bot on your server, contact information can be found below.
 
 ## HOW TO USE BOT:
 In order to use the bot use the following commands in the desired channel.
