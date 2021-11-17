@@ -46,19 +46,23 @@ ikesC = 0 #Default Channel ID
 southsideC = 0 #Default Channel ID
 otherC = 0 #Default Channel ID
 menus = [menuI, menuS, menuO]
+
+#Calculate time
 tz = timezone('US/Eastern')
-now = datetime.now(tz)
+now = datetime.now(tz) #Get current time on East Coast
 hour = now.hour
-time = 25-hour
+time = 25-hour #Calculate time till 1AM
 print(str(time) + ': initial hours till print')
-db = sqlite3.connect('main.sqlite')
+#Storing time in SQL
+db = sqlite3.connect('main.sqlite') 
 cursor = db.cursor()
 cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+#Time is stored as a channel id and the guild id and name are set to development variables
 result = cursor.fetchone()
-if result is None:
+if result is None: #Create time data if not already in database
     sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
     val = (0, time, 'system')
-elif result is not None:
+elif result is not None: #Update time
     sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
     val = (time, 0, 'system')
 cursor.execute(sql,val)
@@ -70,7 +74,7 @@ db.close()
 @bot.event
 async def on_ready():
     """
-    Initializing main db
+    Initializing main SQL Database
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
     cursor.execute('''
@@ -82,7 +86,6 @@ async def on_ready():
     ''')
     """
     print('Bot Online')
-    
     return await bot.change_presence(activity=discord.Game(name='Bot Things'))
 
 #Run on $ikes
@@ -90,23 +93,23 @@ async def on_ready():
 @has_permissions(manage_channels = True)
 async def ikes(ctx):
     global time
-    db = sqlite3.connect('main.sqlite')
+    db = sqlite3.connect('main.sqlite') #Connect to db
     cursor = db.cursor()
     cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'ikes'")
-    result = cursor.fetchone()
-    if result is None:
+    result = cursor.fetchone() #Get channel_id for stored ikes channel in current Discord server 
+    if result is None: #If no value exists
         sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (ctx.guild.id, ctx.channel.id, 'ikes')
+        val = (ctx.guild.id, ctx.channel.id, 'ikes') #Create new data entry
         await ctx.send(f"Ike\'s channel has been set to {ctx.channel.mention}")
-    elif result is not None:
+    elif result is not None: #If there already exists an entry
         sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (ctx.channel.id, ctx.guild.id, 'ikes')
+        val = (ctx.channel.id, ctx.guild.id, 'ikes') #Update data entry
         await ctx.send(f"Ike\'s channel has been updated to {ctx.channel.mention}")
     cursor.execute(sql,val)
     print('A channel for Ike\'s set')
     if menuI not in menus:
         menus.append(menuI) #Add Ikes' Menu to List for Printing
-    #Calculate Current Time Till 1AM
+    #Calculate Current Time Till 1AM and Update Stored Value
     tz = timezone('US/Eastern')
     now = datetime.now(tz)
     hour = now.hour
@@ -124,6 +127,7 @@ async def ikes(ctx):
     cursor.close()
     db.close()
 
+#Print channel set to Ike's
 @bot.command(name='viewikes')
 @has_permissions(manage_channels = True)
 async def viewIkes(ctx):
@@ -328,6 +332,7 @@ async def timeCheck(ctx):
     db.close()
     await ctx.channel.send(message)
 
+#Print list of commands
 @bot.command(name='help')
 @has_permissions(manage_channels = True)
 async def help(ctx):
@@ -343,6 +348,7 @@ async def help(ctx):
                     **$rmSouthside** - Remove the channel where Southside has been set to \n
                     **$rmFrontRoyale** - Remove the channel where Front Royale has been set to \n"""
     await ctx.channel.send(message)
+
 
 @bot.command(name='forceprint')
 @has_permissions(manage_channels = True)
