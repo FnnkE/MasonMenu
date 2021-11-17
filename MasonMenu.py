@@ -30,7 +30,7 @@ soupO = BeautifulSoup(otherP.content, "lxml")
 
 #Calculate Current Day
 currentDay = soupI.find(class_="bite-date current-menu")
-idCurrent = str(16) + "-day"
+idCurrent = currentDay.get('id') + "-day"
 
 #Limit Page to Current Day
 menuI = soupI.find("div", id=idCurrent)
@@ -51,7 +51,7 @@ menus = [menuI, menuS, menuO]
 tz = timezone('US/Eastern')
 now = datetime.now(tz) #Get current time on East Coast
 hour = now.hour
-time = 1 #Calculate time till 1AM
+time = 25-hour #Calculate time till 1AM
 print(str(time) + ': initial hours till print')
 #Storing time in SQL
 db = sqlite3.connect('main.sqlite') 
