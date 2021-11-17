@@ -51,7 +51,16 @@ menus = [menuI, menuS, menuO]
 tz = timezone('US/Eastern')
 now = datetime.now(tz) #Get current time on East Coast
 hour = now.hour
-time = 25-hour
+minute = hour*60 + now.minute
+time = 1500-minute
+db = sqlite3.connect('main.sqlite') 
+cursor = db.cursor()
+sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+val = (time, 0, 'system')
+cursor.execute(sql,val)
+db.commit()
+cursor.close()
+db.close()
 
 async def changePresence():
     await bot.wait_until_ready()
@@ -73,7 +82,8 @@ async def timeCalc():
     tz = timezone('US/Eastern')
     now = datetime.now(tz) #Get current time on East Coast
     hour = now.hour
-    time = 25-hour #Calculate time till 1AM
+    minute = hour*60 + now.minute
+    time = 1500-minute #Calculate time till 1AM
     db = sqlite3.connect('main.sqlite') 
     cursor = db.cursor()
     cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
@@ -329,8 +339,8 @@ async def timeCheck(ctx):
     elif result is not None:
         for c in result:
             if c.isnumeric() == True:
-                message += c
-        message += ' hours until next print'
+                message += str(int(c)//60) + ':' + str(int(c)%60)
+        message += ' until next print'
     cursor.close()
     db.close()
     await ctx.channel.send(message)
@@ -359,7 +369,7 @@ async def forcePrint(ctx):
     await printMenu(cursor,guild_id=ctx.guild.id)
 
 #Run Daily at 1AM
-@tasks.loop(hours=1)
+@tasks.loop(minutes=1)
 async def calledPerDay():
     global time
     #Put time var on SQL database
@@ -379,7 +389,7 @@ async def calledPerDay():
     val = (time, 0, 'system')
     cursor.execute(sql,val)
     if time == 0:
-        time = 24 #Reset Loop - SQL update
+        time = 1440 #Reset Loop - SQL update
         sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
         val = (time, 0, 'system')
         cursor.execute(sql,val)
