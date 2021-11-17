@@ -12,6 +12,7 @@ from pytz import timezone
 import os
 import sqlite3
 import asyncio
+import random
 
 
 #Menu URLs
@@ -39,7 +40,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
+TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.1_lgZ0hp4Sp_v8sg8sktIgqme8o'#os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -51,6 +52,18 @@ tz = timezone('US/Eastern')
 now = datetime.now(tz) #Get current time on East Coast
 hour = now.hour
 time = 25-hour
+
+async def changePresence():
+    await bot.wait_until_ready()
+
+    statuses = ["a  game", f"on {len(bot.guilds)} servers | $help", "discord.py"]
+
+    while not bot.is_closed():
+        status = random.choice(statuses)
+        await bot.change_presence(activity=discord.Game(name=status))
+
+        await asyncio.sleep(10)
+
 
 async def timeCalc():
     global time
@@ -378,4 +391,5 @@ async def before():
     await bot.wait_until_ready()
 
 calledPerDay.start()
+bot.loop.create_task(changePresence())
 bot.run(TOKEN)
