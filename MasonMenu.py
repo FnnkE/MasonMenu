@@ -366,6 +366,9 @@ async def calledPerDay():
     global menuS
     global menuO
     global menus
+    global currentDay
+    global idCurrent
+    global soupI
     print(str(time) + ' hours left')
     #Put time var on SQL database
     db = sqlite3.connect('main.sqlite')
@@ -383,7 +386,10 @@ async def calledPerDay():
     sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
     val = (time, 0, 'system')
     cursor.execute(sql,val)
+    
     if time == 0:
+        currentDay = soupI.find(class_="bite-date current-menu")
+        idCurrent = currentDay.get('id') + "-day"
         #Check if requests are updating
         if menuI in menus:
             menus.remove(menuI)
