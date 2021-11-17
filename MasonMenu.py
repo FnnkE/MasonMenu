@@ -51,7 +51,7 @@ menus = [menuI, menuS, menuO]
 tz = timezone('US/Eastern')
 now = datetime.now(tz) #Get current time on East Coast
 hour = now.hour
-time = 1 #Calculate time till 1AM
+time = 25-hour #Calculate time till 1AM
 print(str(time) + ': initial hours till print')
 #Storing time in SQL
 db = sqlite3.connect('main.sqlite') 
