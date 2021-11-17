@@ -39,7 +39,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.z1-zvngVnM88YyeoLa8un43N6iQ'#os.getenv("TOKEN")
+TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.9GbKw7dxccreXUBaPDTpEWUHDS0'#os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -47,7 +47,10 @@ ikesC = 0 #Default Channel ID
 southsideC = 0 #Default Channel ID
 otherC = 0 #Default Channel ID
 menus = [menuI, menuS, menuO]
-time = 24
+tz = timezone('US/Eastern')
+now = datetime.now(tz) #Get current time on East Coast
+hour = now.hour
+time = 25-hour
 
 async def timeCalc():
     global time
@@ -138,21 +141,106 @@ async def rmMenu(ctx, name):
     cursor.close()
     db.close()
 
+async def printMenu(cursor, guild_id=0):
+    global menuI
+    global menuS
+    global menuO
+    global menus
+    global currentDay
+    global idCurrent
+    global soupI
+    currentDay = soupI.find(class_="bite-date current-menu")
+    idCurrent = currentDay.get('id') + "-day"
+    #Check if requests are updating
+    if menuI in menus:
+        menus.remove(menuI)
+        ikesP = requests.get(ikesURL)
+        soupI = BeautifulSoup(ikesP.content, "lxml")
+        menuI = soupI.find("div", id=idCurrent)
+        menus.append(menuI)
+        print('Ike\'s updated')
+    if menuS in menus:
+        menus.remove(menuS)
+        ssP = requests.get(southsideURL)
+        soupS = BeautifulSoup(ssP.content, "lxml")
+        menuS = soupS.find("div", id=idCurrent)
+        menus.append(menuS)
+        print('Southside updated')
+    if menuO in menus:
+        menus.remove(menuO)
+        otherP = requests.get(otherURL)
+        soupO = BeautifulSoup(otherP.content, "lxml")
+        menuO = soupO.find("div", id=idCurrent)
+        menus.append(menuO)
+        print('Other updated')
+    if guild_id > 0:
+        result = cursor.execute(f"SELECT * FROM main WHERE guild_id={guild_id}")
+    else:
+        result = cursor.execute("SELECT * FROM main")
+    data = result.fetchall()
+    for d in data:
+        #Inits
+        char = 0
+        counter = 0
+        temp = ''
+        flag = 0
+        print(d)
+        #Print Titles of Menus
+        if d[2] == 'ikes':
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            temp= "⋯⋯⋯⋯⋯| **Ike's** |⋯⋯⋯⋯⋯ \n"
+            m = menuI
+        elif d[2] == 'southside':
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            temp= "⋯⋯⋯⋯⋯| **Southside** |⋯⋯⋯⋯⋯ \n"
+            m = menuS
+        elif d[2] == 'other': 
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
+            m = menuO
+        l = m.text.split("\n")
+        #print(l)
+        for i in l:
+            #Calc Characters and Send if Needed
+            for s in temp.split():
+                char += len(s)
+            if char >= 1000:
+                await message_channel.send(temp)
+                #print (temp)
+                if flag == 1:
+                    temp = '⠀'
+                else:
+                    temp = ''
+            char = 0
+            #Adding Text to List Below
+            if i.strip() != '':
+                #print(repr(i)) 
+                if i.isupper() == True or i == '-': #Add Text Decor
+                    if i == 'BREAKFAST' or i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
+                        temp += '\n ━━━***__' + i + '__***━━━ \n'    
+                    else:
+                        temp += '\n **' + i + '** \n'      
+                elif counter == 0: #I'm going to be honest, i forgot what happens after
+                    flag = 1
+                    if temp == '⠀':
+                        temp += i.strip() + '\n'
+                    else:
+                        temp += '\t' + i.strip() + '\n'
+                    counter += 1
+                elif counter == 1:
+                    flag = 0
+                    counter = 0 
+        if len(temp) > 0 and temp != '⠀':
+            await message_channel.send(temp)
 #Run on Bot Start
 @bot.event
 async def on_ready():
-    """
-    Initializing main SQL Database
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS main(
-        guild_id TEXT,
-        channel_id TEXT,
-        name TEXT
-        )
-    ''')
-    """
     print('Bot Online')
     return await bot.change_presence(activity=discord.Game(name='Bot Things'))
 
@@ -180,7 +268,6 @@ async def rmIkes(ctx):
 async def southside(ctx):
     await setMenu(ctx, 'southside')
     await timeCalc()
-    print('A channel for Southside has been set')
 
     
 @bot.command(name='viewsouthside')
@@ -199,7 +286,6 @@ async def rmSS(ctx):
 async def frontroyale(ctx):
     await setMenu(ctx, 'other')
     await timeCalc()
-    print('A channel for Front Royale Commons has been set')
 
 @bot.command(name='viewfrontroyale')
 @has_permissions(manage_channels = True)
@@ -210,7 +296,7 @@ async def viewOther(ctx):
 @has_permissions(manage_channels = True)
 async def rmOther(ctx):
     await rmMenu(ctx, 'other')
-#Run on $time
+
 @bot.command(name='time')
 @has_permissions(manage_channels = True)
 async def timeCheck(ctx):
@@ -231,8 +317,7 @@ async def timeCheck(ctx):
     db.close()
     await ctx.channel.send(message)
 
-#Print list of commands
-@bot.command(name='help')
+@bot.command(name='help') #Print list of commands
 @has_permissions(manage_channels = True)
 async def help(ctx):
     message = """   Commands - \n
@@ -248,27 +333,17 @@ async def help(ctx):
                     **$rmFrontRoyale** - Remove the channel where Front Royale has been set to \n"""
     await ctx.channel.send(message)
 
-
-@bot.command(name='forceprint')
+@bot.command(name='print') #Print list of commands
 @has_permissions(manage_channels = True)
 async def forcePrint(ctx):
-    global loop
-    global time
-    time = 0
-    print('Forcing print')
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    await printMenu(cursor,guild_id=ctx.guild.id)
 
 #Run Daily at 1AM
 @tasks.loop(hours=1)
 async def calledPerDay():
     global time
-    global menuI
-    global menuS
-    global menuO
-    global menus
-    global currentDay
-    global idCurrent
-    global soupI
-    print(str(time) + ' hours left')
     #Put time var on SQL database
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
@@ -285,107 +360,12 @@ async def calledPerDay():
     sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
     val = (time, 0, 'system')
     cursor.execute(sql,val)
-    
     if time == 0:
-        currentDay = soupI.find(class_="bite-date current-menu")
-        idCurrent = currentDay.get('id') + "-day"
-        #Check if requests are updating
-        if menuI in menus:
-            menus.remove(menuI)
-            ikesP = requests.get(ikesURL)
-            soupI = BeautifulSoup(ikesP.content, "lxml")
-            menuI = soupI.find("div", id=idCurrent)
-            menus.append(menuI)
-            print('Ike\'s updated')
-        if menuS in menus:
-            menus.remove(menuS)
-            ssP = requests.get(southsideURL)
-            soupS = BeautifulSoup(ssP.content, "lxml")
-            menuS = soupS.find("div", id=idCurrent)
-            menus.append(menuS)
-            print('Southside updated')
-        if menuO in menus:
-            menus.remove(menuO)
-            otherP = requests.get(otherURL)
-            soupO = BeautifulSoup(otherP.content, "lxml")
-            menuO = soupO.find("div", id=idCurrent)
-            menus.append(menuO)
-            print('Other updated')
         time = 24 #Reset Loop - SQL update
         sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
         val = (time, 0, 'system')
         cursor.execute(sql,val)
-        result = cursor.execute("SELECT * FROM main")
-        data = result.fetchall()
-        for d in data:
-            #Inits
-            char = 0
-            counter = 0
-            temp = ''
-            flag = 0
-            print(d)
-            #Print Titles of Menus
-            if d[2] == 'ikes':
-                channelID = int(d[1])
-                message_channel = bot.get_channel(channelID)
-                print(message_channel)
-                temp= "⋯⋯⋯⋯⋯| **Ike's** |⋯⋯⋯⋯⋯ \n"
-                m = menuI
-            elif d[2] == 'southside':
-                channelID = int(d[1])
-                message_channel = bot.get_channel(channelID)
-                print(message_channel)
-                temp= "⋯⋯⋯⋯⋯| **Southside** |⋯⋯⋯⋯⋯ \n"
-                m = menuS
-            elif d[2] == 'other': 
-                channelID = int(d[1])
-                message_channel = bot.get_channel(channelID)
-                print(message_channel)
-                temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
-                m = menuO
-            l = m.text.split("\n")
-            #print(l)
-            for i in l:
-                #Calc Characters and Send if Needed
-                for s in temp.split():
-                    char += len(s)
-                if char >= 1000:
-                    await message_channel.send(temp)
-                    #print (temp)
-                    if flag == 1:
-                        temp = '⠀'
-                    else:
-                        temp = ''
-                char = 0
-                #Adding Text to List Below
-                if i.strip() != '':
-                    #print(repr(i)) 
-                    if i.isupper() == True or i == '-': #Add Text Decor
-                        if i == 'BREAKFAST' or i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
-                            temp += '\n ━━━***__' + i + '__***━━━ \n'    
-                        else:
-                            temp += '\n **' + i + '** \n'      
-                    elif counter == 0: #I'm going to be honest, i forgot what happens after
-                        flag = 1
-                        if temp == '⠀':
-                            temp += i.strip() + '\n'
-                        else:
-                            temp += '\t' + i.strip() + '\n'
-                        counter += 1
-                    elif counter == 1:
-                        flag = 0
-                        counter = 0 
-            if len(temp) > 0 and temp != '⠀':
-                await message_channel.send(temp)
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
-    result = cursor.fetchone()
-    if result is None:
-        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (0, time, 'system')
-    elif result is not None:
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (time, 0, 'system')
-    cursor.execute(sql,val)
+        await printMenu(cursor)
     db.commit()
     cursor.close()
     db.close()
@@ -394,6 +374,5 @@ async def calledPerDay():
 async def before():
     await bot.wait_until_ready()
 
-asyncio.run(timeCalc())
 calledPerDay.start()
 bot.run(TOKEN)
