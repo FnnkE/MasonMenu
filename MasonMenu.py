@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pytz import timezone
 import os
 import sqlite3
+import asyncio
 
 
 #Menu URLs
@@ -38,7 +39,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
+TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.z1-zvngVnM88YyeoLa8un43N6iQ'#os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -46,29 +47,96 @@ ikesC = 0 #Default Channel ID
 southsideC = 0 #Default Channel ID
 otherC = 0 #Default Channel ID
 menus = [menuI, menuS, menuO]
+time = 24
 
-#Calculate time
-tz = timezone('US/Eastern')
-now = datetime.now(tz) #Get current time on East Coast
-hour = now.hour
-time = 25-hour #Calculate time till 1AM
-print(str(time) + ': initial hours till print')
-#Storing time in SQL
-db = sqlite3.connect('main.sqlite') 
-cursor = db.cursor()
-cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
-#Time is stored as a channel id and the guild id and name are set to development variables
-result = cursor.fetchone()
-if result is None: #Create time data if not already in database
-    sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-    val = (0, time, 'system')
-elif result is not None: #Update time
-    sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-    val = (time, 0, 'system')
-cursor.execute(sql,val)
-db.commit()
-cursor.close()
-db.close()
+async def timeCalc():
+    global time
+    #Calculate time
+    tz = timezone('US/Eastern')
+    now = datetime.now(tz) #Get current time on East Coast
+    hour = now.hour
+    time = 25-hour #Calculate time till 1AM
+    db = sqlite3.connect('main.sqlite') 
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (0, time, 'system')
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (time, 0, 'system')
+    cursor.execute(sql,val)
+    db.commit()
+    cursor.close()
+    db.close()
+
+async def setMenu(ctx, name):
+    if name == 'ikes':
+        title = 'Ike\'s'
+    elif name == 'southside':
+        title = 'Southside'
+    else:
+        title = 'Front Royale Commons'
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = name")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (ctx.guild.id, ctx.channel.id, name)
+        await ctx.send(f"{title} channel has been set to {ctx.channel.mention}")
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (ctx.channel.id, ctx.guild.id, name)
+        await ctx.send(f"{title} channel has been updated to {ctx.channel.mention}")
+    cursor.execute(sql,val)
+    print(f'A channel for {title} has been set')
+    db.commit()
+    cursor.close()
+    db.close()
+
+async def viewMenu(ctx, name):
+    if name == 'ikes':
+        title = 'Ike\'s'
+    elif name == 'southside':
+        title = 'Southside'
+    else:
+        title = 'Front Royale Commons'
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = name")
+    result = cursor.fetchone()
+    if result is None:
+        await ctx.send(f'{title} channel has not be set')
+    elif result is not None:
+        channelID = int(result[0])
+        await ctx.channel.send(f"{title} channel set to <#{channelID}>")
+    cursor.close()
+    db.close()
+
+async def rmMenu(ctx, name):
+    if name == 'ikes':
+        title = 'Ike\'s'
+    elif name == 'southside':
+        title = 'Southside'
+    else:
+        title = 'Front Royale Commons'
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = name")
+    result = cursor.fetchone()
+    if result is None:
+        await ctx.send(f"{title} channel has not been set")
+    elif result is not None:
+        sql = ("DELETE FROM main WHERE channel_id = ? AND guild_id = ? AND name = ?")
+        val = (ctx.channel.id, ctx.guild.id, name)
+        await ctx.send(f"{title} channel has been removed")
+    cursor.execute(sql,val)
+    print(f'A channel for {title} has been removed')
+    db.commit()
+    cursor.close()
+    db.close()
 
 #Run on Bot Start
 @bot.event
@@ -92,225 +160,56 @@ async def on_ready():
 @bot.command(name='ikes')
 @has_permissions(manage_channels = True)
 async def ikes(ctx):
-    global time
-    db = sqlite3.connect('main.sqlite') #Connect to db
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'ikes'")
-    result = cursor.fetchone() #Get channel_id for stored ikes channel in current Discord server 
-    if result is None: #If no value exists
-        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (ctx.guild.id, ctx.channel.id, 'ikes') #Create new data entry
-        await ctx.send(f"Ike\'s channel has been set to {ctx.channel.mention}")
-    elif result is not None: #If there already exists an entry
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (ctx.channel.id, ctx.guild.id, 'ikes') #Update data entry
-        await ctx.send(f"Ike\'s channel has been updated to {ctx.channel.mention}")
-    cursor.execute(sql,val)
-    print('A channel for Ike\'s set')
-    if menuI not in menus:
-        menus.append(menuI) #Add Ikes' Menu to List for Printing
-    #Calculate Current Time Till 1AM and Update Stored Value
-    tz = timezone('US/Eastern')
-    now = datetime.now(tz)
-    hour = now.hour
-    time = 25-hour
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
-    result = cursor.fetchone()
-    if result is None:
-        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (0, time, 'system')
-    elif result is not None:
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (time, 0, 'system')
-    cursor.execute(sql,val)
-    db.commit()
-    cursor.close()
-    db.close()
+    await setMenu(ctx, 'ikes')
+    await timeCalc()
 
 #Print channel set to Ike's
 @bot.command(name='viewikes')
 @has_permissions(manage_channels = True)
 async def viewIkes(ctx):
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'ikes'")
-    result = cursor.fetchone()
-    if result is None:
-        await ctx.send('Ike\'s channel has not be set')
-    elif result is not None:
-        channelID = int(result[0])
-        await ctx.channel.send("Ike\'s channel set to <#{}>".format(channelID))
-    cursor.close()
-    db.close()
+    await viewMenu(ctx, 'ikes')
 
 @bot.command(name='rmikes')
 @has_permissions(manage_channels = True)
 async def rmIkes(ctx):
-    global time
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'ikes'")
-    result = cursor.fetchone()
-    if result is None:
-        await ctx.send(f"Ike\'s channel has not been set")
-    elif result is not None:
-        sql = ("DELETE FROM main WHERE channel_id = ? AND guild_id = ? AND name = ?")
-        val = (ctx.channel.id, ctx.guild.id, 'ikes')
-        await ctx.send(f"Ike\'s channel has been removed")
-    cursor.execute(sql,val)
-    print('A channel for Ike\'s has been removed')
-    db.commit()
-    cursor.close()
-    db.close()
+    await rmMenu(ctx, 'ikes')
 
 #Run on $southside
 @bot.command(name='southside')
 @has_permissions(manage_channels = True)
 async def southside(ctx):
-    global time
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'southside'")
-    result = cursor.fetchone()
-    if result is None:
-        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (ctx.guild.id, ctx.channel.id, 'southside')
-        await ctx.send(f"Southside channel has been set to {ctx.channel.mention}")
-    elif result is not None:
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (ctx.channel.id, ctx.guild.id, 'southside')
-        await ctx.send(f"Southside channel has been updated to {ctx.channel.mention}")
-    cursor.execute(sql,val)
-    print('A channel for Southside set')
-    if menuS not in menus:
-        menus.append(menuS) #Add Southside's Menu to List for Printing
-    #Calculate Current Time Till 1AM
-    tz = timezone('US/Eastern')
-    now = datetime.now(tz)
-    hour = now.hour
-    time = 25-hour
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
-    result = cursor.fetchone()
-    if result is None:
-        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (0, time, 'system')
-    elif result is not None:
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (time, 0, 'system')
-    cursor.execute(sql,val)
-    db.commit()
-    cursor.close()
-    db.close()
+    await setMenu(ctx, 'southside')
+    await timeCalc()
+    print('A channel for Southside has been set')
 
     
 @bot.command(name='viewsouthside')
 @has_permissions(manage_channels = True)
 async def viewSS(ctx):
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'southside'")
-    result = cursor.fetchone()
-    if result is None:
-        await ctx.send('Southside\'s channel has not be set')
-    elif result is not None:
-        channelID = int(result[0])
-        await ctx.channel.send("Southside\'s channel set to <#{}>".format(channelID))
-    cursor.close()
-    db.close()
+    await viewMenu(ctx, 'southside')
 
 @bot.command(name='rmsouthside')
 @has_permissions(manage_channels = True)
 async def rmSS(ctx):
-    global time
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'southside'")
-    result = cursor.fetchone()
-    if result is None:
-        await ctx.send(f"Southside\'s channel has not been set")
-    elif result is not None:
-        sql = ("DELETE FROM main WHERE channel_id = ? AND guild_id = ? AND name = ?")
-        val = (ctx.channel.id, ctx.guild.id, 'southside')
-        await ctx.send(f"Southside\'s channel has been removed")
-    cursor.execute(sql,val)
-    print('A channel for Southside has been removed')
-    db.commit()
-    cursor.close()
-    db.close()
+    await rmMenu(ctx, 'southside')
 
 #Run on $frontroyale
 @bot.command(name='frontroyale')
 @has_permissions(manage_channels = True)
 async def frontroyale(ctx):
-    global time
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'other'")
-    result = cursor.fetchone()
-    if result is None:
-        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (ctx.guild.id, ctx.channel.id, 'other')
-        await ctx.send(f"Front Royale channel has been set to {ctx.channel.mention}")
-    elif result is not None:
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (ctx.channel.id, ctx.guild.id, 'other')
-        await ctx.send(f"Front Royale channel has been updated to {ctx.channel.mention}")
-    cursor.execute(sql,val)
-    print('A channel for Other set')
-    if menuO not in menus:
-        menus.append(menuO) #Add Front Royale's Menu to List for Printing
-    #Calculate Current Time Till 1AM
-    tz = timezone("US/Eastern")
-    now = datetime.now(tz)
-    time = 25-hour
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
-    result = cursor.fetchone()
-    if result is None:
-        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (0, time, 'system')
-    elif result is not None:
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (time, 0, 'system')
-    cursor.execute(sql,val)
-    db.commit()
-    cursor.close()
-    db.close()
+    await setMenu(ctx, 'other')
+    await timeCalc()
+    print('A channel for Front Royale Commons has been set')
 
 @bot.command(name='viewfrontroyale')
 @has_permissions(manage_channels = True)
 async def viewOther(ctx):
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'other'")
-    result = cursor.fetchone()
-    if result is None:
-        await ctx.send('Front Royale\'s channel has not be set')
-    elif result is not None:
-        channelID = int(result[0])
-        await ctx.channel.send("Front Royale\'s channel set to <#{}>".format(channelID))
-    cursor.close()
-    db.close()
+    await viewMenu(ctx, 'other')
 
 @bot.command(name='rmfrontroyale')
 @has_permissions(manage_channels = True)
 async def rmOther(ctx):
-    global time
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = 'other'")
-    result = cursor.fetchone()
-    if result is None:
-        await ctx.send(f"Front Royale\'s channel has not been set")
-    elif result is not None:
-        sql = ("DELETE FROM main WHERE channel_id = ? AND guild_id = ? AND name = ?")
-        val = (ctx.channel.id, ctx.guild.id, 'other')
-        await ctx.send(f"Front Royale\'s channel has been removed")
-    cursor.execute(sql,val)
-    print('A channel for Other has been removed')
-    db.commit()
-    cursor.close()
-    db.close()
-
+    await rmMenu(ctx, 'other')
 #Run on $time
 @bot.command(name='time')
 @has_permissions(manage_channels = True)
@@ -494,6 +393,7 @@ async def calledPerDay():
 @calledPerDay.before_loop
 async def before():
     await bot.wait_until_ready()
-            
+
+asyncio.run(timeCalc())
 calledPerDay.start()
 bot.run(TOKEN)
