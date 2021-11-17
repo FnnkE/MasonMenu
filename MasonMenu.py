@@ -40,7 +40,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.1_lgZ0hp4Sp_v8sg8sktIgqme8o'#os.getenv("TOKEN")
+TOKEN = os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -55,13 +55,15 @@ time = 25-hour
 
 async def changePresence():
     await bot.wait_until_ready()
-
-    statuses = ["a  game", f"on {len(bot.guilds)} servers | $help", "discord.py"]
+    guilds = bot.guilds
+    members = 0
+    for guild in guilds:
+        members += len(guild.members)
+    statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
 
     while not bot.is_closed():
         status = random.choice(statuses)
         await bot.change_presence(activity=discord.Game(name=status))
-
         await asyncio.sleep(10)
 
 
