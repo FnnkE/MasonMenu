@@ -51,7 +51,7 @@ menus = [menuI, menuS, menuO]
 tz = timezone('US/Eastern')
 now = datetime.now(tz) #Get current time on East Coast
 hour = now.hour
-time = 25-hour #Calculate time till 1AM
+time = 1 #Calculate time till 1AM
 print(str(time) + ': initial hours till print')
 #Storing time in SQL
 db = sqlite3.connect('main.sqlite') 
@@ -461,7 +461,7 @@ async def calledPerDay():
                 #Adding Text to List Below
                 if i.strip() != '':
                     #print(repr(i)) 
-                    if i.isupper() == True: #Add Text Decor
+                    if i.isupper() == True or i == '-': #Add Text Decor
                         if i == 'BREAKFAST' or i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
                             temp += '\n ━━━***__' + i + '__***━━━ \n'    
                         else:
