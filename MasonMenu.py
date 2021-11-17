@@ -39,7 +39,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.9GbKw7dxccreXUBaPDTpEWUHDS0'#os.getenv("TOKEN")
+TOKEN = os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -211,7 +211,7 @@ async def printMenu(cursor, guild_id=0):
             for s in temp.split():
                 char += len(s)
             if char >= 1000:
-                await message_channel.send(temp)
+                msg = await message_channel.send(temp)
                 #print (temp)
                 if flag == 1:
                     temp = '⠀'
@@ -237,7 +237,10 @@ async def printMenu(cursor, guild_id=0):
                     flag = 0
                     counter = 0 
         if len(temp) > 0 and temp != '⠀':
-            await message_channel.send(temp)
+            msg = await message_channel.send(temp)
+        await msg.add_reaction("⬆️")
+        await msg.add_reaction("🔻")
+
 #Run on Bot Start
 @bot.event
 async def on_ready():
