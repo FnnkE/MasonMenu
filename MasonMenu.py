@@ -40,7 +40,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
+TOKEN = 'ODkyMTA4ODQ2Mzg0OTUxMzA2.YVIHGw.qszMAutEFi0XhKrGmIcVVDdAUM0'#os.getenv("TOKEN")
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -181,6 +181,8 @@ async def printMenu(cursor, guild_id=0):
         menus.remove(menuI)
         ikesP = requests.get(ikesURL)
         soupI = BeautifulSoup(ikesP.content, "lxml")
+        currentDay = soupI.find(class_="bite-date current-menu")
+        idCurrent = currentDay.get('id') + "-day"
         menuI = soupI.find("div", id=idCurrent)
         menus.append(menuI)
         print('Ike\'s updated')
@@ -188,6 +190,8 @@ async def printMenu(cursor, guild_id=0):
         menus.remove(menuS)
         ssP = requests.get(southsideURL)
         soupS = BeautifulSoup(ssP.content, "lxml")
+        currentDay = soupS.find(class_="bite-date current-menu")
+        idCurrent = currentDay.get('id') + "-day"
         menuS = soupS.find("div", id=idCurrent)
         menus.append(menuS)
         print('Southside updated')
@@ -195,6 +199,8 @@ async def printMenu(cursor, guild_id=0):
         menus.remove(menuO)
         otherP = requests.get(otherURL)
         soupO = BeautifulSoup(otherP.content, "lxml")
+        currentDay = soupO.find(class_="bite-date current-menu")
+        idCurrent = currentDay.get('id') + "-day"
         menuO = soupO.find("div", id=idCurrent)
         menus.append(menuO)
         print('Other updated')
@@ -367,6 +373,17 @@ async def forcePrint(ctx):
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
     await printMenu(cursor,guild_id=ctx.guild.id)
+
+@bot.command(name='sql') #Print list of commands
+@has_permissions(manage_channels = True)
+async def sqlPrint(ctx):
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT * FROM main")
+    result = cursor.fetchall()
+    for r in result:
+        await ctx.channel.send(r)
+    db.close()
 
 #Run Daily at 1AM
 @tasks.loop(minutes=1)
