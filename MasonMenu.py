@@ -9,7 +9,7 @@ from discord.ext.commands import has_permissions
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from pytz import timezone
-import os
+from os.path import exists
 import sqlite3
 import asyncio
 import random
@@ -40,7 +40,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = os.getenv("TOKEN")
+TOKEN = 'INSERT TOKEN'
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -53,14 +53,7 @@ now = datetime.now(tz) #Get current time on East Coast
 hour = now.hour
 minute = hour*60 + now.minute
 time = 1500-minute
-db = sqlite3.connect('main.sqlite') 
-cursor = db.cursor()
-sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-val = (time, 0, 'system')
-cursor.execute(sql,val)
-db.commit()
-cursor.close()
-db.close()
+
 
 async def changePresence():
     await bot.wait_until_ready()
@@ -275,6 +268,21 @@ async def printMenu(cursor, guild_id=0):
 #Run on Bot Start
 @bot.event
 async def on_ready():
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS main(
+        guild_id TEXT,
+        channel_id TEXT,
+        name TEXT
+        )
+    ''')
+    sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+    val = (time, 0, 'system')
+    cursor.execute(sql,val)
+    db.commit()
+    cursor.close()
+    db.close()
     print('Bot Online')
     return await bot.change_presence(activity=discord.Game(name='Bot Things'))
 
@@ -373,6 +381,7 @@ async def forcePrint(ctx):
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
     await printMenu(cursor,guild_id=ctx.guild.id)
+    db.close()
 
 @bot.command(name='sql') #Print list of commands
 @has_permissions(manage_channels = True)
