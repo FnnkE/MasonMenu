@@ -40,7 +40,7 @@ menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
 #Discord Inits
-TOKEN = 'INSERT TOKEN'
+TOKEN = 'TOKEN'
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 #Various Inits
@@ -277,9 +277,16 @@ async def on_ready():
         name TEXT
         )
     ''')
-    sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-    val = (time, 0, 'system')
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (0, time, 'system')
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (time, 0, 'system')
     cursor.execute(sql,val)
+    print(f'Time has been recorded')
     db.commit()
     cursor.close()
     db.close()
