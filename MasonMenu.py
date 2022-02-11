@@ -31,8 +31,24 @@ soupS = BeautifulSoup(ssP.content, "lxml")
 soupO = BeautifulSoup(otherP.content, "lxml")
 
 #Calculate Current Day
-currentDay = soupI.find(class_="bite-date current-menu")
-idCurrent = currentDay.get('id') + "-day"
+loop = True
+while loop == True:
+    try:
+        currentDay = soupI.find(class_="bite-date current-menu")
+        idCurrent = currentDay.get('id') + "-day"
+        currentDay = soupS.find(class_="bite-date current-menu")
+        idCurrent = currentDay.get('id') + "-day"
+        currentDay = soupO.find(class_="bite-date current-menu")
+        idCurrent = currentDay.get('id') + "-day"
+    except AttributeError:
+        ikesP = requests.get(ikesURL)
+        ssP = requests.get(southsideURL)
+        otherP = requests.get(otherURL)
+        soupI = BeautifulSoup(ikesP.content, "lxml")
+        soupS = BeautifulSoup(ssP.content, "lxml")
+        soupO = BeautifulSoup(otherP.content, "lxml")
+    else:
+        loop = False;
 
 #Limit Page to Current Day
 menuI = soupI.find("div", id=idCurrent)
