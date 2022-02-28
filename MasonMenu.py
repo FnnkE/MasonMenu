@@ -31,24 +31,9 @@ soupS = BeautifulSoup(ssP.content, "lxml")
 soupO = BeautifulSoup(otherP.content, "lxml")
 
 #Calculate Current Day
-loop = True
-while loop == True:
-    try:
-        currentDay = soupI.find(class_="bite-date current-menu")
-        idCurrent = currentDay.get('id') + "-day"
-        currentDay = soupS.find(class_="bite-date current-menu")
-        idCurrent = currentDay.get('id') + "-day"
-        currentDay = soupO.find(class_="bite-date current-menu")
-        idCurrent = currentDay.get('id') + "-day"
-    except AttributeError:
-        ikesP = requests.get(ikesURL)
-        ssP = requests.get(southsideURL)
-        otherP = requests.get(otherURL)
-        soupI = BeautifulSoup(ikesP.content, "lxml")
-        soupS = BeautifulSoup(ssP.content, "lxml")
-        soupO = BeautifulSoup(otherP.content, "lxml")
-    else:
-        loop = False;
+currentDay = soupI.find(class_="bite-date current-menu")
+idCurrent = currentDay.get('id') + "-day"
+print("Current Day: " + idCurrent)
 
 #Limit Page to Current Day
 menuI = soupI.find("div", id=idCurrent)
@@ -117,7 +102,7 @@ async def setMenu(ctx, name):
         title = 'Front Royale Commons'
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = name")
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = {name}")
     result = cursor.fetchone()
     if result is None:
         sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
@@ -380,6 +365,7 @@ async def timeCheck(ctx):
         message += ' until next print'
     cursor.close()
     db.close()
+    print(message + ' until next print')
     await ctx.channel.send(message)
 
 @bot.command(name='help') #Print list of commands
