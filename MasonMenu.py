@@ -21,9 +21,23 @@ southsideURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locatio
 otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
 
 #Get Pages
-ikesP = requests.get(ikesURL)
-ssP = requests.get(southsideURL)
-otherP = requests.get(otherURL)
+valid = False
+while (valid == False): #Possibly Detectable as DDOS
+    ikesP = requests.get(ikesURL)
+    print("Ikes Response Code: ", ikesP.status_code)
+    if ikesP.status_code == 200: valid = True
+
+valid = False
+while (valid == False):
+    ssP = requests.get(southsideURL)
+    print("Southside Response Code: ", ssP.status_code)
+    if ssP.status_code == 200: valid = True
+
+valid = False
+while (valid == False):
+    otherP = requests.get(otherURL)
+    print("Other Response Code: ", otherP.status_code)
+    if otherP.status_code == 200: valid = True
 
 #Convert Pages
 soupI = BeautifulSoup(ikesP.content, "lxml")
@@ -55,6 +69,22 @@ hour = now.hour
 minute = hour*60 + now.minute
 time = 1500-minute
 
+async def updateMenus(): #never used
+    global ikesP
+    global ssP
+    global otherP
+    global currentDay
+    global idCurrent
+
+    ikesP = requests.get(ikesURL)
+    ssP = requests.get(southsideURL)
+    otherP = requests.get(otherURL)
+    soupI = BeautifulSoup(ikesP.content, "lxml")
+    soupS = BeautifulSoup(ssP.content, "lxml")
+    soupO = BeautifulSoup(otherP.content, "lxml")
+    currentDay = soupI.find(class_="bite-date current-menu")
+    idCurrent = currentDay.get('id') + "-day"
+    print("Current Day: " + idCurrent)
 
 async def changePresence():
     await bot.wait_until_ready()
@@ -102,7 +132,7 @@ async def setMenu(ctx, name):
         title = 'Front Royale Commons'
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = {name}")
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = '{name}'")
     result = cursor.fetchone()
     if result is None:
         sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
@@ -127,7 +157,7 @@ async def viewMenu(ctx, name):
         title = 'Front Royale Commons'
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = name")
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = '{name}'")
     result = cursor.fetchone()
     if result is None:
         await ctx.send(f'{title} channel has not be set')
@@ -146,7 +176,7 @@ async def rmMenu(ctx, name):
         title = 'Front Royale Commons'
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = name")
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = '{name}'")
     result = cursor.fetchone()
     if result is None:
         await ctx.send(f"{title} channel has not been set")
@@ -168,36 +198,30 @@ async def printMenu(cursor, guild_id=0):
     global currentDay
     global idCurrent
     global soupI
+
+    valid = False
+    while (valid == False): #Possibly Detectable as DDOS
+        ikesP = requests.get(ikesURL)
+        print("Ikes Response Code: ", ikesP.status_code)
+        if ikesP.status_code == 200: valid = True
+
+    valid = False
+    while (valid == False):
+        ssP = requests.get(southsideURL)
+        print("Southside Response Code: ", ssP.status_code)
+        if ssP.status_code == 200: valid = True
+
+    valid = False
+    while (valid == False):
+        otherP = requests.get(otherURL)
+        print("Other Response Code: ", otherP.status_code)
+        if otherP.status_code == 200: valid = True
+    
     currentDay = soupI.find(class_="bite-date current-menu")
     idCurrent = currentDay.get('id') + "-day"
-    #Check if requests are updating
-    if menuI in menus:
-        menus.remove(menuI)
-        ikesP = requests.get(ikesURL)
-        soupI = BeautifulSoup(ikesP.content, "lxml")
-        currentDay = soupI.find(class_="bite-date current-menu")
-        idCurrent = currentDay.get('id') + "-day"
-        menuI = soupI.find("div", id=idCurrent)
-        menus.append(menuI)
-        print('Ike\'s updated')
-    if menuS in menus:
-        menus.remove(menuS)
-        ssP = requests.get(southsideURL)
-        soupS = BeautifulSoup(ssP.content, "lxml")
-        currentDay = soupS.find(class_="bite-date current-menu")
-        idCurrent = currentDay.get('id') + "-day"
-        menuS = soupS.find("div", id=idCurrent)
-        menus.append(menuS)
-        print('Southside updated')
-    if menuO in menus:
-        menus.remove(menuO)
-        otherP = requests.get(otherURL)
-        soupO = BeautifulSoup(otherP.content, "lxml")
-        currentDay = soupO.find(class_="bite-date current-menu")
-        idCurrent = currentDay.get('id') + "-day"
-        menuO = soupO.find("div", id=idCurrent)
-        menus.append(menuO)
-        print('Other updated')
+    menuI = soupI.find("div", id=idCurrent)
+    print(idCurrent)
+
     if guild_id > 0:
         result = cursor.execute(f"SELECT * FROM main WHERE guild_id={guild_id}")
     else:
@@ -209,6 +233,7 @@ async def printMenu(cursor, guild_id=0):
         counter = 0
         temp = ''
         flag = 0
+        breakfastFlag = False
         print(d)
         #Print Titles of Menus
         if d[2] == 'ikes':
@@ -229,6 +254,8 @@ async def printMenu(cursor, guild_id=0):
             print(message_channel)
             temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
             m = menuO
+        else:
+            continue
         l = m.text.split("\n")
         #print(l)
         for i in l:
@@ -247,8 +274,11 @@ async def printMenu(cursor, guild_id=0):
             if i.strip() != '':
                 #print(repr(i)) 
                 if i.isupper() == True or i == '-': #Add Text Decor
-                    if i == 'BREAKFAST' or i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
+                    if i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
                         temp += '\n ━━━***__' + i + '__***━━━ \n'    
+                    elif i == 'BREAKFAST' and breakfastFlag == False:
+                        temp += '\n ━━━***__' + i + '__***━━━ \n'
+                        breakfastFlag = True
                     else:
                         temp += '\n **' + i + '** \n'      
                 elif counter == 0: #I'm going to be honest, i forgot what happens after
@@ -278,7 +308,7 @@ async def on_ready():
         name TEXT
         )
     ''')
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    cursor.execute("SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
     result = cursor.fetchone()
     if result is None:
         sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
