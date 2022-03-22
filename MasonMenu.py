@@ -204,23 +204,30 @@ async def printMenu(cursor, guild_id=0):
         ikesP = requests.get(ikesURL)
         print("Ikes Response Code: ", ikesP.status_code)
         if ikesP.status_code == 200: valid = True
+    soupI = BeautifulSoup(ikesP.content, "lxml")
 
     valid = False
     while (valid == False):
         ssP = requests.get(southsideURL)
         print("Southside Response Code: ", ssP.status_code)
         if ssP.status_code == 200: valid = True
+    soupS = BeautifulSoup(ssP.content, "lxml")
 
     valid = False
     while (valid == False):
         otherP = requests.get(otherURL)
         print("Other Response Code: ", otherP.status_code)
         if otherP.status_code == 200: valid = True
-    
+    soupO = BeautifulSoup(otherP.content, "lxml")
+
     currentDay = soupI.find(class_="bite-date current-menu")
     idCurrent = currentDay.get('id') + "-day"
     menuI = soupI.find("div", id=idCurrent)
     print(idCurrent)
+
+    menuI = soupI.find("div", id=idCurrent)
+    menuS = soupS.find("div", id=idCurrent)
+    menuO = soupO.find("div", id=idCurrent)
 
     if guild_id > 0:
         result = cursor.execute(f"SELECT * FROM main WHERE guild_id={guild_id}")
