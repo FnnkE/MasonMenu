@@ -74,7 +74,7 @@ now = datetime.now(tz) #Get current time on East Coast
 hour = now.hour
 minute = hour*60 + now.minute
 time = 1500-minute
-print("Time until next print: " + time)
+print("Time until next print: " + str(time))
 
 async def updateMenus(): #never used
     global ikesP
@@ -131,7 +131,7 @@ async def timeCalc():
     db.commit()
     cursor.close()
     db.close()
-    print("Time until next print: " + time)
+    print("Time until next print: " + str(time))
 
 async def setMenu(ctx, name):
     if name == 'ikes':
