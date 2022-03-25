@@ -9,7 +9,6 @@ from discord.ext.commands import has_permissions
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from pytz import timezone
-from os.path import exists
 import sqlite3
 import asyncio
 import random
@@ -20,6 +19,7 @@ ikesURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16653&locationId=2
 southsideURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locationId=27747003&whereami=http://masondining.sodexomyway.com/dining-near-me/southsideURL"
 otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
 
+#-------------------------------------------------------------------------------------------------------
 #Get Pages
 valid = False
 while (valid == False): #Possibly Detectable as DDOS
@@ -54,20 +54,27 @@ menuI = soupI.find("div", id=idCurrent)
 menuS = soupS.find("div", id=idCurrent)
 menuO = soupO.find("div", id=idCurrent)
 
+#-------------------------------------------------------------------------------------------------------
+
 #Discord Inits
 TOKEN = 'TOKEN'
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
+#-------------------------------------------------------------------------------------------------------
 #Various Inits
 ikesC = 0 #Default Channel ID
 southsideC = 0 #Default Channel ID
 otherC = 0 #Default Channel ID
 menus = [menuI, menuS, menuO]
+#-------------------------------------------------------------------------------------------------------
+
+#Time function?
 tz = timezone('US/Eastern')
 now = datetime.now(tz) #Get current time on East Coast
 hour = now.hour
 minute = hour*60 + now.minute
 time = 1500-minute
+print("Time until next print: " + time)
 
 async def updateMenus(): #never used
     global ikesP
@@ -76,6 +83,7 @@ async def updateMenus(): #never used
     global currentDay
     global idCurrent
 
+    print("Updating Menus")
     ikesP = requests.get(ikesURL)
     ssP = requests.get(southsideURL)
     otherP = requests.get(otherURL)
@@ -91,7 +99,7 @@ async def changePresence():
     guilds = bot.guilds
     members = 0
     for guild in guilds:
-        members += len(guild.members)
+        members += guild.member_count
     statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
 
     while not bot.is_closed():
@@ -103,6 +111,7 @@ async def changePresence():
 async def timeCalc():
     global time
     #Calculate time
+    print("Calculating time...")
     tz = timezone('US/Eastern')
     now = datetime.now(tz) #Get current time on East Coast
     hour = now.hour
@@ -122,6 +131,7 @@ async def timeCalc():
     db.commit()
     cursor.close()
     db.close()
+    print("Time until next print: " + time)
 
 async def setMenu(ctx, name):
     if name == 'ikes':
@@ -137,13 +147,14 @@ async def setMenu(ctx, name):
     if result is None:
         sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
         val = (ctx.guild.id, ctx.channel.id, name)
+        print(f"{title} channel has been set to {ctx.channel.mention} in {ctx.guild.id}")
         await ctx.send(f"{title} channel has been set to {ctx.channel.mention}")
     elif result is not None:
         sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
         val = (ctx.channel.id, ctx.guild.id, name)
+        print(f"{title} channel has been updated to {ctx.channel.mention} in {ctx.guild.id}")
         await ctx.send(f"{title} channel has been updated to {ctx.channel.mention}")
     cursor.execute(sql,val)
-    print(f'A channel for {title} has been set')
     db.commit()
     cursor.close()
     db.close()
@@ -160,9 +171,11 @@ async def viewMenu(ctx, name):
     cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = '{name}'")
     result = cursor.fetchone()
     if result is None:
+        print(f'{title} channel has not be set in {ctx.guild.id}')
         await ctx.send(f'{title} channel has not be set')
     elif result is not None:
         channelID = int(result[0])
+        print(f"{title} channel set to <#{channelID}> in {ctx.guild.id}")
         await ctx.channel.send(f"{title} channel set to <#{channelID}>")
     cursor.close()
     db.close()
@@ -179,13 +192,14 @@ async def rmMenu(ctx, name):
     cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = '{name}'")
     result = cursor.fetchone()
     if result is None:
+        print(f'{title} channel has not be set in {ctx.guild.id}')
         await ctx.send(f"{title} channel has not been set")
     elif result is not None:
         sql = ("DELETE FROM main WHERE channel_id = ? AND guild_id = ? AND name = ?")
         val = (ctx.channel.id, ctx.guild.id, name)
+        print(f'{title} channel has been removed in {ctx.guild.id}')
         await ctx.send(f"{title} channel has been removed")
     cursor.execute(sql,val)
-    print(f'A channel for {title} has been removed')
     db.commit()
     cursor.close()
     db.close()
@@ -355,7 +369,6 @@ async def rmIkes(ctx):
 async def southside(ctx):
     await setMenu(ctx, 'southside')
     await timeCalc()
-
     
 @bot.command(name='viewsouthside')
 @has_permissions(manage_channels = True)
@@ -398,7 +411,11 @@ async def timeCheck(ctx):
     elif result is not None:
         for c in result:
             if c.isnumeric() == True:
-                message += str(int(c)//60) + ':' + str(int(c)%60)
+                message += str(int(c)//60) + ':'
+                if int(c)%60 < 10:
+                    message += "0" + str(int(c)%60)
+                else:
+                    message += str(int(c)%60)
         message += ' until next print'
     cursor.close()
     db.close()
