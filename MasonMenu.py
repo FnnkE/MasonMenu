@@ -13,86 +13,54 @@ import sqlite3
 import asyncio
 import random
 
-
 #Menu URLs
 ikesURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16653&locationId=27747017&whereami=http://masondining.sodexomyway.com/dining-near-me/ikes"
 southsideURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locationId=27747003&whereami=http://masondining.sodexomyway.com/dining-near-me/southsideURL"
 otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
 
-#-------------------------------------------------------------------------------------------------------
-#Get Pages
-valid = False
-while (valid == False): #Possibly Detectable as DDOS
-    ikesP = requests.get(ikesURL)
-    print("Ikes Response Code: ", ikesP.status_code)
-    if ikesP.status_code == 200: valid = True
-
-valid = False
-while (valid == False):
-    ssP = requests.get(southsideURL)
-    print("Southside Response Code: ", ssP.status_code)
-    if ssP.status_code == 200: valid = True
-
-valid = False
-while (valid == False):
-    otherP = requests.get(otherURL)
-    print("Other Response Code: ", otherP.status_code)
-    if otherP.status_code == 200: valid = True
-
-#Convert Pages
-soupI = BeautifulSoup(ikesP.content, "lxml")
-soupS = BeautifulSoup(ssP.content, "lxml")
-soupO = BeautifulSoup(otherP.content, "lxml")
-
-#Calculate Current Day
-currentDay = soupI.find(class_="bite-date current-menu")
-idCurrent = currentDay.get('id') + "-day"
-print("Current Day: " + idCurrent)
-
-#Limit Page to Current Day
-menuI = soupI.find("div", id=idCurrent)
-menuS = soupS.find("div", id=idCurrent)
-menuO = soupO.find("div", id=idCurrent)
-
-#-------------------------------------------------------------------------------------------------------
-
 #Discord Inits
 TOKEN = 'TOKEN'
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
-#-------------------------------------------------------------------------------------------------------
-#Various Inits
-ikesC = 0 #Default Channel ID
-southsideC = 0 #Default Channel ID
-otherC = 0 #Default Channel ID
-menus = [menuI, menuS, menuO]
-#-------------------------------------------------------------------------------------------------------
-
-#Time function?
-tz = timezone('US/Eastern')
-now = datetime.now(tz) #Get current time on East Coast
-hour = now.hour
-minute = hour*60 + now.minute
-time = 1500-minute
-print("Time until next print: " + time)
-
-async def updateMenus(): #never used
+async def updateMenus():
     global ikesP
     global ssP
     global otherP
     global currentDay
     global idCurrent
+    global menuI
+    global menuS
+    global menuO
 
-    print("Updating Menus")
-    ikesP = requests.get(ikesURL)
-    ssP = requests.get(southsideURL)
-    otherP = requests.get(otherURL)
+    valid = False
+    while (valid == False):
+        ikesP = requests.get(ikesURL)
+        print("Ikes Response Code: ", ikesP.status_code)
+        if ikesP.status_code == 200: valid = True
     soupI = BeautifulSoup(ikesP.content, "lxml")
+
+    valid = False
+    while (valid == False):
+        ssP = requests.get(southsideURL)
+        print("Southside Response Code: ", ssP.status_code)
+        if ssP.status_code == 200: valid = True
     soupS = BeautifulSoup(ssP.content, "lxml")
+
+    valid = False
+    while (valid == False):
+        otherP = requests.get(otherURL)
+        print("Other Response Code: ", otherP.status_code)
+        if otherP.status_code == 200: valid = True
     soupO = BeautifulSoup(otherP.content, "lxml")
+
     currentDay = soupI.find(class_="bite-date current-menu")
     idCurrent = currentDay.get('id') + "-day"
-    print("Current Day: " + idCurrent)
+    menuI = soupI.find("div", id=idCurrent)
+    print(idCurrent)
+
+    menuI = soupI.find("div", id=idCurrent)
+    menuS = soupS.find("div", id=idCurrent)
+    menuO = soupO.find("div", id=idCurrent)
 
 async def changePresence():
     await bot.wait_until_ready()
@@ -208,41 +176,10 @@ async def printMenu(cursor, guild_id=0):
     global menuI
     global menuS
     global menuO
-    global menus
     global currentDay
     global idCurrent
-    global soupI
 
-    valid = False
-    while (valid == False): #Possibly Detectable as DDOS
-        ikesP = requests.get(ikesURL)
-        print("Ikes Response Code: ", ikesP.status_code)
-        if ikesP.status_code == 200: valid = True
-    soupI = BeautifulSoup(ikesP.content, "lxml")
-
-    valid = False
-    while (valid == False):
-        ssP = requests.get(southsideURL)
-        print("Southside Response Code: ", ssP.status_code)
-        if ssP.status_code == 200: valid = True
-    soupS = BeautifulSoup(ssP.content, "lxml")
-
-    valid = False
-    while (valid == False):
-        otherP = requests.get(otherURL)
-        print("Other Response Code: ", otherP.status_code)
-        if otherP.status_code == 200: valid = True
-    soupO = BeautifulSoup(otherP.content, "lxml")
-
-    currentDay = soupI.find(class_="bite-date current-menu")
-    idCurrent = currentDay.get('id') + "-day"
-    menuI = soupI.find("div", id=idCurrent)
-    print(idCurrent)
-
-    menuI = soupI.find("div", id=idCurrent)
-    menuS = soupS.find("div", id=idCurrent)
-    menuO = soupO.find("div", id=idCurrent)
-
+    updateMenus()
     if guild_id > 0:
         result = cursor.execute(f"SELECT * FROM main WHERE guild_id={guild_id}")
     else:
@@ -320,6 +257,7 @@ async def printMenu(cursor, guild_id=0):
 #Run on Bot Start
 @bot.event
 async def on_ready():
+    timeCalc()
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
     cursor.execute('''
@@ -419,7 +357,7 @@ async def timeCheck(ctx):
         message += ' until next print'
     cursor.close()
     db.close()
-    print(message + ' until next print')
+    print(message)
     await ctx.channel.send(message)
 
 @bot.command(name='help') #Print list of commands
@@ -429,13 +367,14 @@ async def help(ctx):
                     **$ikes** - Set channel to print Ike\'s menu \n
                     **$southside** - Set channel to print Southside\'s menu \n
                     **$frontroyale** - Set channel to print Front Royale Common\'s menu \n
-                    **$time** - Check how long until next print (Rough hour estimate) \n
                     **$viewikes** - View the channel where Ike\'s has been set to \n
                     **$viewsouthside** - View the channel where Southside\'s has been set to \n
                     **$viewikes** - View the channel where Front Royales\'s has been set to \n
                     **$rmIkes** - Remove the channel where Ike\'s has been set to \n
                     **$rmSouthside** - Remove the channel where Southside has been set to \n
-                    **$rmFrontRoyale** - Remove the channel where Front Royale has been set to \n"""
+                    **$rmFrontRoyale** - Remove the channel where Front Royale has been set to \n
+                    **$time** - Check how long until next print (hh:mm) \n
+                    **$print** - Force print all menus for your server \n"""
     await ctx.channel.send(message)
 
 @bot.command(name='print') #Print list of commands
