@@ -446,17 +446,6 @@ async def forcePrint(ctx):
     await printMenu(cursor,guild_id=ctx.guild.id)
     db.close()
 
-@bot.command(name='sql') #Print list of commands
-@has_permissions(manage_channels = True)
-async def sqlPrint(ctx):
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT * FROM main")
-    result = cursor.fetchall()
-    for r in result:
-        await ctx.channel.send(r)
-    db.close()
-
 #Run Daily at 1AM
 @tasks.loop(minutes=1)
 async def calledPerDay():
