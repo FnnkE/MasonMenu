@@ -100,7 +100,7 @@ async def changePresence():
     members = 0
     for guild in guilds:
         members += guild.member_count
-    statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
+    statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", 'with Ike', 'around with the menus']
 
     while not bot.is_closed():
         status = random.choice(statuses)
