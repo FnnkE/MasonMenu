@@ -20,7 +20,7 @@ otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=
 
 #Discord Inits
 TOKEN = 'TOKEN'
-bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
+bot = commands.Bot(command_prefix="|", help_command=None, case_insensitive=True)
 
 async def updateMenus():
     global ikesP
@@ -99,7 +99,7 @@ async def timeCalc():
     db.commit()
     cursor.close()
     db.close()
-    print("Time until next print: " + time)
+    print("Time until next print: " + str(time))
 
 async def setMenu(ctx, name):
     if name == 'ikes':
@@ -257,7 +257,7 @@ async def printMenu(cursor, guild_id=0):
 #Run on Bot Start
 @bot.event
 async def on_ready():
-    timeCalc()
+    await timeCalc()
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
     cursor.execute('''
@@ -430,6 +430,7 @@ async def calledPerDay():
 async def before():
     await bot.wait_until_ready()
 
+bot.run(TOKEN)
 calledPerDay.start()
 bot.loop.create_task(changePresence())
-bot.run(TOKEN)
+
