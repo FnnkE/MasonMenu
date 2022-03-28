@@ -62,19 +62,21 @@ async def updateMenus():
     menuS = soupS.find("div", id=idCurrent)
     menuO = soupO.find("div", id=idCurrent)
 
-async def changePresence():
+async def changePresence(): #updates status stats | still make random?
     await bot.wait_until_ready()
-    guilds = bot.guilds
     members = 0
-    for guild in guilds:
-        members += guild.member_count
-    statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
-
-    while not bot.is_closed():
-        status = random.choice(statuses)
+    index = 0
+    while not bot.is_closed(): #Added more into the loop for constant updates
+        guilds = bot.guilds
+        if (index == 0):
+            for guild in guilds:
+                members += guild.member_count
+        statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
+        status = statuses[index]
         await bot.change_presence(activity=discord.Game(name=status))
-        await asyncio.sleep(10)
-
+        index += 1
+        if (index == len(statuses)): index = 0
+        await asyncio.sleep(1) #lowered time for testing
 
 async def timeCalc():
     global time
