@@ -226,9 +226,8 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
     data = result.fetchall()
     for d in data:
         #Inits
-        values = ["","","","","","","","","","","",""]
-        titles = ['METRO GRILL', 'CLARENDON', 'DUPONT - PASTA', 'DUPONT - PIZZA', 'HOT CEREAL/SOUP', 'VIENNA', 'CAPITAL SOUTH - DELI',
-                'EASTERN MARKET', 'SALAD BAR', 'SIMPLE SERVINGS', 'EASTERN-OMELET','MISCELLANEOUS']
+        values = ["Food items"]
+        titles = ['Dining Hall Stations']
         index = 0
         counter = 0
         breakfastFlag = False
@@ -242,6 +241,8 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             color = 0x00ff41
             titles = ['METRO GRILL', 'CLARENDON', 'DUPONT - PASTA', 'DUPONT - PIZZA', 'HOT CEREAL/SOUP', 'VIENNA', 'CAPITAL SOUTH - DELI',
                 'EASTERN MARKET', 'SALAD BAR', 'SIMPLE SERVINGS', 'EASTERN-OMELET','MISCELLANEOUS']
+            values = ["","","","","","","","","","","",""]
+            defaultValues = values
             m = menuI
         elif d[2] == 'southside':
             channelID = int(d[1])
@@ -249,6 +250,11 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             print(message_channel)
             author = "Southside"
             color = 0xff9d00
+            titles = ['CHEF\'S TABLE', 'FARMERS FIELD', 'INDULGENT', 'OMELET BAR', 'SOUP', 'GOLD RUSH COLD', 'GRILLED',
+                'KNEADED', 'SEMOLINA PASTA', 'APPETIZER', 'BEVERAGE','MISCELLANEOUS', 'BREAKFAST', 'DESSERT','ENTREE',
+                'ENTREE-MEAL', 'HALAL @ CHEF\'S TABLE', 'PIZZA', 'SANDWICH-HOT','STARCH', "VEGETABLE", 'CHEF TABLE 10PM-2AM']
+            values = ["","","","","","","","","","","","","","","","","","","","","",""]
+            defaultValues = values
             m = menuS
         elif d[2] == 'other': 
             channelID = int(d[1])
@@ -256,6 +262,10 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             print(message_channel)
             author = "Front Royale"
             color = 0x0096ff
+            titles = ['BAKERY', 'BREAKFAST', 'CONDIMENT/GARNISH', 'ENTREE', 'SALAD', 'DESSERT', 'ENTREE - SALAD',
+                'PIZZA', 'SANDWICH - COLD', 'SANDWICH - HOT', 'SNACK','MISCELLANEOUS', 'STARCH', 'ENTREE - MEAL',
+                'SALAD DRESSING', 'SNACK', 'VEGETABLE']
+            values = ["","","","","","","","","","","","","","","","",""]
             m = menuO
         else:
             continue
@@ -271,8 +281,7 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
                             if v != "":
                                 embed.add_field(name=titles[c], value=v,inline= True)
                             c+=1
-                        values = ["","","","","","","","","","","",""]
-                        title = ""
+                        values = defaultValues
                         embed.set_author(name=author)
                         await sendMessage(message_channel, embed)
                         embed = discord.Embed(title=i, description= date, color = color)    
@@ -305,7 +314,27 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
                         elif i == titles[10]:
                             index = 10
                         elif i == titles[11]:
-                            index = 11     
+                            index = 11  
+                        elif i == titles[12]:
+                            index = 12
+                        elif i == titles[13]:
+                            index = 13
+                        elif i == titles[14]:
+                            index = 14
+                        elif i == titles[15]:
+                            index = 15
+                        elif i == titles[16]:
+                            index = 16
+                        elif i == titles[17]:
+                            index = 17
+                        elif i == titles[18]:
+                            index = 18
+                        elif i == titles[19]:
+                            index = 19
+                        elif i == titles[20]:
+                            index = 20     
+                        elif i == titles[21]:
+                            index = 21
                 elif counter == 0: #Skips calories
                     values[index] += i.strip() + '\n'
                     counter += 1
@@ -317,7 +346,7 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
                 embed.add_field(name=titles[c], value=v,inline= True)
             c+=1
         embed.set_author(name=author)
-        embed.set_footer(text="Anyone reading this?", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
+        embed.set_footer(text="Why do Dining Halls have sooo many stations...", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
         await sendMessage(message_channel, embed)
 
 async def sendMessage(message_channel, embed):
