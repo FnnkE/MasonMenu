@@ -65,7 +65,6 @@ async def changePresence(): #updates status stats | still make random?
                 members += guild.member_count
         statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
         status = statuses[index]
-        print(status)
         await bot.change_presence(activity=discord.Game(name=status))
         index += 1
         if (index == len(statuses)): index = 0
@@ -79,7 +78,10 @@ async def timeCalc():
     now = datetime.now(tz) #Get current time on East Coast
     hour = now.hour
     minute = hour*60 + now.minute
-    time = 1500-minute #Calculate time till 1AM
+    if minute == now.minute:
+        time = 60-minute
+    else:
+        time = 1500-minute #Calculate time till 1AM
     db = sqlite3.connect('main.sqlite') 
     cursor = db.cursor()
     cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
@@ -213,7 +215,10 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
     global menuO
     global currentDay
     global idCurrent
-
+    tz = timezone('US/Eastern')
+    now = datetime.now(tz) #Get current time on East Coast
+    date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
+    color = 0x000000
     if guild_id > 0:
         result = cursor.execute(f"SELECT * FROM main WHERE guild_id={guild_id}")
     else:
@@ -234,18 +239,23 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             message_channel = bot.get_channel(channelID)
             print(message_channel)
             author = "Ikes"
+            color = 0x00ff41
+            titles = ['METRO GRILL', 'CLARENDON', 'DUPONT - PASTA', 'DUPONT - PIZZA', 'HOT CEREAL/SOUP', 'VIENNA', 'CAPITAL SOUTH - DELI',
+                'EASTERN MARKET', 'SALAD BAR', 'SIMPLE SERVINGS', 'EASTERN-OMELET','MISCELLANEOUS']
             m = menuI
         elif d[2] == 'southside':
             channelID = int(d[1])
             message_channel = bot.get_channel(channelID)
             print(message_channel)
             author = "Southside"
+            color = 0xff9d00
             m = menuS
         elif d[2] == 'other': 
             channelID = int(d[1])
             message_channel = bot.get_channel(channelID)
             print(message_channel)
             author = "Front Royale"
+            color = 0x0096ff
             m = menuO
         else:
             continue
@@ -263,41 +273,40 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
                             c+=1
                         values = ["","","","","","","","","","","",""]
                         title = ""
+                        embed.set_author(name=author)
                         await sendMessage(message_channel, embed)
-                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)    
+                        embed = discord.Embed(title=i, description= date, color = color)    
                     elif i == 'BREAKFAST' and breakfastFlag == False:
-                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)
+                        embed = discord.Embed(title=i, description= date, color = color)
                         breakfastFlag = True
                     elif i == 'BRUNCH':
-                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)
-                    else:
-                        print(repr(i))                          
-                        if i == 'METRO GRILL':
+                        embed = discord.Embed(title=i, description= date, color = color)
+                    else:                         
+                        if i == titles[0]:
                             index = 0
-                        elif i == 'CLARENDON':
+                        elif i == titles[1]:
                             index = 1
-                        elif i == 'DUPONT - PASTA':
+                        elif i == titles[2]:
                             index = 2
-                        elif i == 'DUPONT - PIZZA':
+                        elif i == titles[3]:
                             index = 3
-                        elif i == 'HOT CEREAL/SOUP':
+                        elif i == titles[4]:
                             index = 4
-                        elif i == 'VIENNA':
+                        elif i == titles[5]:
                             index = 5
-                        elif i == 'CAPITAL SOUTH - DELI':
+                        elif i == titles[6]:
                             index = 6
-                        elif i == 'EASTERN MARKET':
+                        elif i == titles[7]:
                             index = 7
-                        elif i == 'SALAD BAR':
+                        elif i == titles[8]:
                             index = 8
-                        elif i == 'SIMPLE SERVINGS':
+                        elif i == titles[9]:
                             index = 9
-                        elif i == 'EASTERN-OMELET':
+                        elif i == titles[10]:
                             index = 10
-                        elif i == 'MISCELLANEOUS':
+                        elif i == titles[11]:
                             index = 11     
                 elif counter == 0: #Skips calories
-                    print('index:', index)
                     values[index] += i.strip() + '\n'
                     counter += 1
                 elif counter == 1:
@@ -308,9 +317,8 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
                 embed.add_field(name=titles[c], value=v,inline= True)
             c+=1
         embed.set_author(name=author)
-        embed.set_footer(text="Test :)", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
+        embed.set_footer(text="Anyone reading this?", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
         await sendMessage(message_channel, embed)
-        break
 
 async def sendMessage(message_channel, embed):
     msg = await message_channel.send(embed=embed)
@@ -414,7 +422,6 @@ async def help(ctx):
 @bot.command(name='print') #Print list of commands
 @has_permissions(manage_channels = True)
 async def forcePrint(ctx):
-    await updateMenus()
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
     await printMenu(cursor,guild_id=ctx.guild.id)
