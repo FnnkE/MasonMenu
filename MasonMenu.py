@@ -22,7 +22,7 @@ southsideURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locatio
 otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
 
 #Discord Inits
-TOKEN = 'OTU2OTYzNjI1NjQwMjc2MDUw.Yj330w.oxr26bjg7BzBYOgz0rF0HPDHsDk'
+TOKEN = 'TOKEN'
 bot = commands.Bot(command_prefix="|", help_command=None, case_insensitive=True)
 
 #Run on Bot Start
@@ -207,162 +207,7 @@ async def rmMenu(ctx, name):
     cursor.close()
     db.close()
 
-async def printMenu(cursor, guild_id=0):
-    global menuI
-    global menuS
-    global menuO
-    global currentDay
-    global idCurrent
-
-    updateMenus()
-    if guild_id > 0:
-        result = cursor.execute(f"SELECT * FROM main WHERE guild_id={guild_id}")
-    else:
-        result = cursor.execute("SELECT * FROM main")
-    data = result.fetchall()
-    for d in data:
-        #Inits
-        char = 0
-        counter = 0
-        temp = ''
-        flag = 0
-        breakfastFlag = False
-        print(d)
-        #Print Titles of Menus
-        if d[2] == 'ikes':
-            channelID = int(d[1])
-            message_channel = bot.get_channel(channelID)
-            print(message_channel)
-            temp= "⋯⋯⋯⋯⋯| **Ike's** |⋯⋯⋯⋯⋯ \n"
-            m = menuI
-        elif d[2] == 'southside':
-            channelID = int(d[1])
-            message_channel = bot.get_channel(channelID)
-            print(message_channel)
-            temp= "⋯⋯⋯⋯⋯| **Southside** |⋯⋯⋯⋯⋯ \n"
-            m = menuS
-        elif d[2] == 'other': 
-            channelID = int(d[1])
-            message_channel = bot.get_channel(channelID)
-            print(message_channel)
-            temp= "⋯⋯⋯⋯⋯| **SMSC Front Royal Commons** |⋯⋯⋯⋯⋯ \n"
-            m = menuO
-        else:
-            continue
-        l = m.text.split("\n")
-        #print(l)
-        for i in l:
-            #Calc Characters and Send if Needed
-            for s in temp.split():
-                char += len(s)
-            if char >= 1000:
-                msg = await message_channel.send(temp)
-                #print (temp)
-                if flag == 1:
-                    temp = '⠀'
-                else:
-                    temp = ''
-            char = 0
-            #Adding Text to List Below
-            if i.strip() != '':
-                #print(repr(i)) 
-                if i.isupper() == True or i == '-': #Add Text Decor
-                    if i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
-                        temp += '\n ━━━***__' + i + '__***━━━ \n'    
-                    elif i == 'BREAKFAST' and breakfastFlag == False:
-                        temp += '\n ━━━***__' + i + '__***━━━ \n'
-                        breakfastFlag = True
-                    else:
-                        temp += '\n **' + i + '** \n'      
-                elif counter == 0: #I'm going to be honest, i forgot what happens after
-                    flag = 1
-                    if temp == '⠀':
-                        temp += i.strip() + '\n'
-                    else:
-                        temp += '\t' + i.strip() + '\n'
-                    counter += 1
-                elif counter == 1:
-                    flag = 0
-                    counter = 0 
-        if len(temp) > 0 and temp != '⠀':
-            msg = await message_channel.send(temp)
-        await msg.add_reaction("⬆️")
-        await msg.add_reaction("🔻")
-
-async def printEmbed(cursor, guild_id=0):
-    global menuI
-    global menuS
-    global menuO
-    global currentDay
-    global idCurrent
-
-    if guild_id > 0:
-        result = cursor.execute(f"SELECT * FROM main WHERE guild_id={guild_id}")
-    else:
-        result = cursor.execute("SELECT * FROM main")
-    data = result.fetchall()
-    for d in data:
-        #Inits
-        title = ""
-        counter = 0
-        counters = 0
-        values = ""
-        breakfastFlag = False
-        print(d)
-        #Print Titles of Menus
-        if d[2] == 'ikes':
-            channelID = int(d[1])
-            message_channel = bot.get_channel(channelID)
-            print(message_channel)
-            author = "Ikes"
-            m = menuI
-        elif d[2] == 'southside':
-            channelID = int(d[1])
-            message_channel = bot.get_channel(channelID)
-            print(message_channel)
-            author = "Southside"
-            m = menuS
-        elif d[2] == 'other': 
-            channelID = int(d[1])
-            message_channel = bot.get_channel(channelID)
-            print(message_channel)
-            author = "Front Royale"
-            m = menuO
-        else:
-            continue
-        l = m.text.split("\n")
-        #print(l)
-        for i in l:
-            #Adding Text to List Below
-            if i.strip() != '':
-                if i.isupper() == True or i == '-':
-                    if i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
-                        embed.add_field(name=title, value=values,inline= True)
-                        values = ""
-                        title = ""
-                        await sendMessage(message_channel, embed) #could cause problems - (Brunch)
-                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)    
-                    elif i == 'BREAKFAST' and breakfastFlag == False:
-                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)
-                        breakfastFlag = True
-                    else:
-                        if title != "": 
-                            embed.add_field(name=title, value=values,inline= True)
-                            values = ""
-                            counters += 1
-                        title = i      
-                elif counter == 0: #Skips calories
-                    values += i.strip() + '\n'
-                    counter += 1
-                elif counter == 1:
-                    counter = 0 
-        embed.add_field(name=title, value=values,inline= True)
-        embed.set_author(name=author)
-        embed.set_footer(text="Test :)", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
-        await sendMessage(message_channel, embed)
-        break
-
-async def printEmbedButBetter(cursor, guild_id=0): #Make Visually Better
+async def printMenu(cursor, guild_id=0): #Make Visually Better
     global menuI
     global menuS
     global menuO
@@ -472,20 +317,6 @@ async def sendMessage(message_channel, embed):
     await msg.add_reaction("⬆️")
     await msg.add_reaction("🔻")
 
-@bot.command(name='display')
-@has_permissions(manage_channels = True)
-async def display(ctx):#Embed test
-    embed = discord.Embed(title="Breakfast", description= "March 28th", color = 0x87CEEB)
-    embed.set_author(name="Ike's")
-    embed.add_field(name="Food1", value="Food2",inline=True)
-    embed.add_field(name="Food3", value="Food4",inline=True)
-    embed.add_field(name="Food5", value="---",inline=True)
-    embed.add_field(name="Food6", value="---",inline=False)
-    embed.add_field(name="Station", value="Food7,Food7,Food7,Food7,Food7\nFood8\nFood9\nFood10",inline=True)
-    embed.add_field(name="Station2", value="Food7,Food7,Food7,Food7,Food7\nFood12\nFood13\nFood14",inline=True)
-    embed.set_footer(text="Fun messages?", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
-    await ctx.send(embed=embed)
-
 #Run on $ikes
 @bot.command(name='ikes')
 @has_permissions(manage_channels = True)
@@ -586,7 +417,7 @@ async def forcePrint(ctx):
     await updateMenus()
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
-    await printEmbedButBetter(cursor,guild_id=ctx.guild.id)
+    await printMenu(cursor,guild_id=ctx.guild.id)
     db.close()
 
 @bot.command(name='sql') #Print list of commands
