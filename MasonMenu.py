@@ -1,4 +1,7 @@
 #Code By FnkE
+from email.policy import default
+from optparse import Values
+from unittest import case
 import discord
 from discord import Member
 from discord import message
@@ -19,8 +22,100 @@ southsideURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locatio
 otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
 
 #Discord Inits
-TOKEN = 'TOKEN'
+TOKEN = 'OTU2OTYzNjI1NjQwMjc2MDUw.Yj330w.oxr26bjg7BzBYOgz0rF0HPDHsDk'
 bot = commands.Bot(command_prefix="|", help_command=None, case_insensitive=True)
+
+#Run on Bot Start
+@bot.event
+async def on_ready():
+    await timeCalc()
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS main(
+        guild_id TEXT,
+        channel_id TEXT,
+        name TEXT
+        )
+    ''')
+    cursor.execute("SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (0, time, 'system')
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (time, 0, 'system')
+    cursor.execute(sql,val)
+    print(f'Time has been recorded')
+    db.commit()
+    cursor.close()
+    db.close()
+    await updateMenus()
+    print('Bot Online')
+
+async def changePresence(): #updates status stats | still make random?
+    await bot.wait_until_ready()
+    index = 0
+    while not bot.is_closed(): #Added more into the loop for constant updates
+        guilds = bot.guilds
+        members = 0
+        if (index == 0):
+            for guild in guilds:
+                members += guild.member_count
+        statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
+        status = statuses[index]
+        print(status)
+        await bot.change_presence(activity=discord.Game(name=status))
+        index += 1
+        if (index == len(statuses)): index = 0
+        await asyncio.sleep(10) #lowered time for testing
+
+async def timeCalc():
+    global time
+    #Calculate time
+    print("Calculating time...")
+    tz = timezone('US/Eastern')
+    now = datetime.now(tz) #Get current time on East Coast
+    hour = now.hour
+    minute = hour*60 + now.minute
+    time = 1500-minute #Calculate time till 1AM
+    db = sqlite3.connect('main.sqlite') 
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
+    result = cursor.fetchone()
+    if result is None:
+        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
+        val = (0, time, 'system')
+    elif result is not None:
+        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
+        val = (time, 0, 'system')
+    cursor.execute(sql,val)
+    db.commit()
+    cursor.close()
+    db.close()
+    print("Time until next print: " + str(time))
+
+async def viewMenu(ctx, name):
+    if name == 'ikes':
+        title = 'Ike\'s'
+    elif name == 'southside':
+        title = 'Southside'
+    else:
+        title = 'Front Royale Commons'
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = '{name}'")
+    result = cursor.fetchone()
+    if result is None:
+        print(f'{title} channel has not be set in {ctx.guild.id}')
+        await ctx.send(f'{title} channel has not be set')
+    elif result is not None:
+        channelID = int(result[0])
+        print(f"{title} channel set to <#{channelID}> in {ctx.guild.id}")
+        await ctx.channel.send(f"{title} channel set to <#{channelID}>")
+    cursor.close()
+    db.close()    
 
 async def updateMenus():
     global ikesP
@@ -62,47 +157,6 @@ async def updateMenus():
     menuS = soupS.find("div", id=idCurrent)
     menuO = soupO.find("div", id=idCurrent)
 
-async def changePresence(): #updates status stats | still make random?
-    await bot.wait_until_ready()
-    members = 0
-    index = 0
-    while not bot.is_closed(): #Added more into the loop for constant updates
-        guilds = bot.guilds
-        if (index == 0):
-            for guild in guilds:
-                members += guild.member_count
-        statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
-        status = statuses[index]
-        await bot.change_presence(activity=discord.Game(name=status))
-        index += 1
-        if (index == len(statuses)): index = 0
-        await asyncio.sleep(1) #lowered time for testing
-
-async def timeCalc():
-    global time
-    #Calculate time
-    print("Calculating time...")
-    tz = timezone('US/Eastern')
-    now = datetime.now(tz) #Get current time on East Coast
-    hour = now.hour
-    minute = hour*60 + now.minute
-    time = 1500-minute #Calculate time till 1AM
-    db = sqlite3.connect('main.sqlite') 
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
-    result = cursor.fetchone()
-    if result is None:
-        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (0, time, 'system')
-    elif result is not None:
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (time, 0, 'system')
-    cursor.execute(sql,val)
-    db.commit()
-    cursor.close()
-    db.close()
-    print("Time until next print: " + str(time))
-
 async def setMenu(ctx, name):
     if name == 'ikes':
         title = 'Ike\'s'
@@ -126,27 +180,6 @@ async def setMenu(ctx, name):
         await ctx.send(f"{title} channel has been updated to {ctx.channel.mention}")
     cursor.execute(sql,val)
     db.commit()
-    cursor.close()
-    db.close()
-
-async def viewMenu(ctx, name):
-    if name == 'ikes':
-        title = 'Ike\'s'
-    elif name == 'southside':
-        title = 'Southside'
-    else:
-        title = 'Front Royale Commons'
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT channel_id FROM main WHERE guild_id = {ctx.guild.id} AND name = '{name}'")
-    result = cursor.fetchone()
-    if result is None:
-        print(f'{title} channel has not be set in {ctx.guild.id}')
-        await ctx.send(f'{title} channel has not be set')
-    elif result is not None:
-        channelID = int(result[0])
-        print(f"{title} channel set to <#{channelID}> in {ctx.guild.id}")
-        await ctx.channel.send(f"{title} channel set to <#{channelID}>")
     cursor.close()
     db.close()
 
@@ -256,34 +289,202 @@ async def printMenu(cursor, guild_id=0):
         await msg.add_reaction("⬆️")
         await msg.add_reaction("🔻")
 
-#Run on Bot Start
-@bot.event
-async def on_ready():
-    await timeCalc()
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS main(
-        guild_id TEXT,
-        channel_id TEXT,
-        name TEXT
-        )
-    ''')
-    cursor.execute("SELECT channel_id FROM main WHERE guild_id = 0 AND name = 'system'")
-    result = cursor.fetchone()
-    if result is None:
-        sql = ("INSERT INTO main(guild_id, channel_id, name) VALUES(?,?,?)")
-        val = (0, time, 'system')
-    elif result is not None:
-        sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
-        val = (time, 0, 'system')
-    cursor.execute(sql,val)
-    print(f'Time has been recorded')
-    db.commit()
-    cursor.close()
-    db.close()
-    print('Bot Online')
-    return await bot.change_presence(activity=discord.Game(name='Bot Things'))
+async def printEmbed(cursor, guild_id=0):
+    global menuI
+    global menuS
+    global menuO
+    global currentDay
+    global idCurrent
+
+    if guild_id > 0:
+        result = cursor.execute(f"SELECT * FROM main WHERE guild_id={guild_id}")
+    else:
+        result = cursor.execute("SELECT * FROM main")
+    data = result.fetchall()
+    for d in data:
+        #Inits
+        title = ""
+        counter = 0
+        counters = 0
+        values = ""
+        breakfastFlag = False
+        print(d)
+        #Print Titles of Menus
+        if d[2] == 'ikes':
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            author = "Ikes"
+            m = menuI
+        elif d[2] == 'southside':
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            author = "Southside"
+            m = menuS
+        elif d[2] == 'other': 
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            author = "Front Royale"
+            m = menuO
+        else:
+            continue
+        l = m.text.split("\n")
+        #print(l)
+        for i in l:
+            #Adding Text to List Below
+            if i.strip() != '':
+                if i.isupper() == True or i == '-':
+                    if i == 'LUNCH' or i == 'DINNER' or i == 'BRUNCH' or i == 'LATE NIGHT':
+                        embed.add_field(name=title, value=values,inline= True)
+                        values = ""
+                        title = ""
+                        await sendMessage(message_channel, embed) #could cause problems - (Brunch)
+                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)    
+                    elif i == 'BREAKFAST' and breakfastFlag == False:
+                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)
+                        breakfastFlag = True
+                    else:
+                        if title != "": 
+                            embed.add_field(name=title, value=values,inline= True)
+                            values = ""
+                            counters += 1
+                        title = i      
+                elif counter == 0: #Skips calories
+                    values += i.strip() + '\n'
+                    counter += 1
+                elif counter == 1:
+                    counter = 0 
+        embed.add_field(name=title, value=values,inline= True)
+        embed.set_author(name=author)
+        embed.set_footer(text="Test :)", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
+        await sendMessage(message_channel, embed)
+        break
+
+async def printEmbedButBetter(cursor, guild_id=0): #Make Visually Better
+    global menuI
+    global menuS
+    global menuO
+    global currentDay
+    global idCurrent
+
+    if guild_id > 0:
+        result = cursor.execute(f"SELECT * FROM main WHERE guild_id={guild_id}")
+    else:
+        result = cursor.execute("SELECT * FROM main")
+    data = result.fetchall()
+    for d in data:
+        #Inits
+        values = ["","","","","","","","","","","",""]
+        titles = ['METRO GRILL', 'CLARENDON', 'DUPONT - PASTA', 'DUPONT - PIZZA', 'HOT CEREAL/SOUP', 'VIENNA', 'CAPITAL SOUTH - DELI',
+                'EASTERN MARKET', 'SALAD BAR', 'SIMPLE SERVINGS', 'EASTERN-OMELET','MISCELLANEOUS']
+        index = 0
+        counter = 0
+        breakfastFlag = False
+        print(d)
+        #Print Titles of Menus
+        if d[2] == 'ikes':
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            author = "Ikes"
+            m = menuI
+        elif d[2] == 'southside':
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            author = "Southside"
+            m = menuS
+        elif d[2] == 'other': 
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            author = "Front Royale"
+            m = menuO
+        else:
+            continue
+        l = m.text.split("\n")
+        #print(l)
+        for i in l:
+            #Adding Text to List Below
+            if i.strip() != '':
+                if i.isupper() == True or i == '-':
+                    if i == 'LUNCH' or i == 'DINNER' or i == 'LATE NIGHT':
+                        c=0
+                        for v in values:
+                            if v != "":
+                                embed.add_field(name=titles[c], value=v,inline= True)
+                            c+=1
+                        values = ["","","","","","","","","","","",""]
+                        title = ""
+                        await sendMessage(message_channel, embed)
+                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)    
+                    elif i == 'BREAKFAST' and breakfastFlag == False:
+                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)
+                        breakfastFlag = True
+                    elif i == 'BRUNCH':
+                        embed = discord.Embed(title=i, description= "Current Date", color = 0x87CEEB)
+                    else:
+                        print(repr(i))                          
+                        if i == 'METRO GRILL':
+                            index = 0
+                        elif i == 'CLARENDON':
+                            index = 1
+                        elif i == 'DUPONT - PASTA':
+                            index = 2
+                        elif i == 'DUPONT - PIZZA':
+                            index = 3
+                        elif i == 'HOT CEREAL/SOUP':
+                            index = 4
+                        elif i == 'VIENNA':
+                            index = 5
+                        elif i == 'CAPITAL SOUTH - DELI':
+                            index = 6
+                        elif i == 'EASTERN MARKET':
+                            index = 7
+                        elif i == 'SALAD BAR':
+                            index = 8
+                        elif i == 'SIMPLE SERVINGS':
+                            index = 9
+                        elif i == 'EASTERN-OMELET':
+                            index = 10
+                        elif i == 'MISCELLANEOUS':
+                            index = 11     
+                elif counter == 0: #Skips calories
+                    print('index:', index)
+                    values[index] += i.strip() + '\n'
+                    counter += 1
+                elif counter == 1:
+                    counter = 0 
+        c=0
+        for v in values:
+            if v != "":
+                embed.add_field(name=titles[c], value=v,inline= True)
+            c+=1
+        embed.set_author(name=author)
+        embed.set_footer(text="Test :)", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
+        await sendMessage(message_channel, embed)
+        break
+
+async def sendMessage(message_channel, embed):
+    msg = await message_channel.send(embed=embed)
+    await msg.add_reaction("⬆️")
+    await msg.add_reaction("🔻")
+
+@bot.command(name='display')
+@has_permissions(manage_channels = True)
+async def display(ctx):#Embed test
+    embed = discord.Embed(title="Breakfast", description= "March 28th", color = 0x87CEEB)
+    embed.set_author(name="Ike's")
+    embed.add_field(name="Food1", value="Food2",inline=True)
+    embed.add_field(name="Food3", value="Food4",inline=True)
+    embed.add_field(name="Food5", value="---",inline=True)
+    embed.add_field(name="Food6", value="---",inline=False)
+    embed.add_field(name="Station", value="Food7,Food7,Food7,Food7,Food7\nFood8\nFood9\nFood10",inline=True)
+    embed.add_field(name="Station2", value="Food7,Food7,Food7,Food7,Food7\nFood12\nFood13\nFood14",inline=True)
+    embed.set_footer(text="Fun messages?", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
+    await ctx.send(embed=embed)
 
 #Run on $ikes
 @bot.command(name='ikes')
@@ -382,9 +583,10 @@ async def help(ctx):
 @bot.command(name='print') #Print list of commands
 @has_permissions(manage_channels = True)
 async def forcePrint(ctx):
+    await updateMenus()
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
-    await printMenu(cursor,guild_id=ctx.guild.id)
+    await printEmbedButBetter(cursor,guild_id=ctx.guild.id)
     db.close()
 
 @bot.command(name='sql') #Print list of commands
@@ -432,7 +634,6 @@ async def calledPerDay():
 async def before():
     await bot.wait_until_ready()
 
-bot.run(TOKEN)
 calledPerDay.start()
 bot.loop.create_task(changePresence())
-
+bot.run(TOKEN)
