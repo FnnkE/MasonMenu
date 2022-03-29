@@ -290,7 +290,12 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
                         breakfastFlag = True
                     elif i == 'BRUNCH':
                         embed = discord.Embed(title=i, description= date, color = color)
-                    else:                         
+                    else:
+                        #Replacement Code? ------------------
+                        for t in titles:
+                            if i == t:
+                                index = t.index    
+                        #-------------------------------------                    
                         if i == titles[0]:
                             index = 0
                         elif i == titles[1]:
