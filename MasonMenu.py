@@ -25,6 +25,9 @@ otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=
 TOKEN = 'TOKEN'
 bot = commands.Bot(command_prefix="|", help_command=None, case_insensitive=True)
 
+global footer 
+footer = "By MasonMenu"
+
 #Run on Bot Start
 @bot.event
 async def on_ready():
@@ -215,6 +218,7 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
     global menuO
     global currentDay
     global idCurrent
+    global footer
     tz = timezone('US/Eastern')
     now = datetime.now(tz) #Get current time on East Coast
     date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
@@ -231,6 +235,7 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
         index = 0
         counter = 0
         breakfastFlag = False
+        flag = False
         print(d)
         #Print Titles of Menus
         if d[2] == 'ikes':
@@ -242,7 +247,6 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             titles = ['METRO GRILL', 'CLARENDON', 'DUPONT - PASTA', 'DUPONT - PIZZA', 'HOT CEREAL/SOUP', 'VIENNA', 'CAPITAL SOUTH - DELI',
                 'EASTERN MARKET', 'SALAD BAR', 'SIMPLE SERVINGS', 'EASTERN-OMELET','MISCELLANEOUS']
             values = ["","","","","","","","","","","",""]
-            defaultValues = values
             m = menuI
         elif d[2] == 'southside':
             channelID = int(d[1])
@@ -250,11 +254,10 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             print(message_channel)
             author = "Southside"
             color = 0xff9d00
-            titles = ['CHEF\'S TABLE', 'FARMERS FIELD', 'INDULGENT', 'OMELET BAR', 'SOUP', 'GOLD RUSH COLD', 'GRILLED',
-                'KNEADED', 'SEMOLINA PASTA', 'APPETIZER', 'BEVERAGE','MISCELLANEOUS', 'BREAKFAST', 'DESSERT','ENTREE',
-                'ENTREE-MEAL', 'HALAL @ CHEF\'S TABLE', 'PIZZA', 'SANDWICH-HOT','STARCH', "VEGETABLE", 'CHEF TABLE 10PM-2AM']
-            values = ["","","","","","","","","","","","","","","","","","","","","",""]
-            defaultValues = values
+            titles = ['SEMOLINA PASTA', 'FARMERS FIELD', 'GOLD RUSH COLD', 'GRILLED', 'SIMPLE SERVINGS', 'CHEF\'S TABLE', 'INDULGENT', 'ENTREE', 
+                'ENTREE - MEAL', 'SANDWICH - HOT', 'SANDWICH - COLD', 'APPETIZER', 'BREAKFAST', 'OMELET BAR', 'SOUP', 'KNEADED', 'PIZZA', 'HALAL @ CHEF\'S TABLE',
+                'STARCH', "VEGETABLE", 'BEVERAGE', 'DESSERT', 'MISCELLANEOUS','CHEF TABLE 10PM-2AM']    
+            values = ["","","","","","","","","","","","","","","","","","","","","","","","","",""]
             m = menuS
         elif d[2] == 'other': 
             channelID = int(d[1])
@@ -262,9 +265,8 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             print(message_channel)
             author = "Front Royale"
             color = 0x0096ff
-            titles = ['BAKERY', 'BREAKFAST', 'CONDIMENT/GARNISH', 'ENTREE', 'SALAD', 'DESSERT', 'ENTREE - SALAD',
-                'PIZZA', 'SANDWICH - COLD', 'SANDWICH - HOT', 'SNACK','MISCELLANEOUS', 'STARCH', 'ENTREE - MEAL',
-                'SALAD DRESSING', 'SNACK', 'VEGETABLE']
+            titles = ['SANDWICH - HOT', 'SANDWICH - COLD', 'ENTREE', 'VEGETABLE', 'CONDIMENT/GARNISH', 'BREAKFAST', 'SALAD DRESSING',
+                 'DESSERT', 'PIZZA', 'SALAD', 'ENTREE - SALAD','ENTREE - MEAL', 'STARCH', 'SOUP', 'SNACK', 'BAKERY', 'MISCELLANEOUS']
             values = ["","","","","","","","","","","","","","","","",""]
             m = menuO
         else:
@@ -277,12 +279,13 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
                 if i.isupper() == True or i == '-':
                     if i == 'LUNCH' or i == 'DINNER' or i == 'LATE NIGHT':
                         c=0
-                        for v in values:
+                        for ind, v in enumerate(values):
                             if v != "":
                                 embed.add_field(name=titles[c], value=v,inline= True)
                             c+=1
-                        values = defaultValues
+                            values[ind] = ""
                         embed.set_author(name=author)
+                        #embed.set_thumbnail(url="https://content-service.sodexomyway.com/media/southside-hero_tcm991-72218_w1920_h976.jpg?url=https://masondining.sodexomyway.com/")
                         await sendMessage(message_channel, embed)
                         embed = discord.Embed(title=i, description= date, color = color)    
                     elif i == 'BREAKFAST' and breakfastFlag == False:
@@ -291,67 +294,27 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
                     elif i == 'BRUNCH':
                         embed = discord.Embed(title=i, description= date, color = color)
                     else:
-                        #Replacement Code? ------------------
-                        for t in titles:
+                        for ind, t in enumerate(titles):
                             if i == t:
-                                index = t.index    
-                        #-------------------------------------                    
-                        if i == titles[0]:
-                            index = 0
-                        elif i == titles[1]:
-                            index = 1
-                        elif i == titles[2]:
-                            index = 2
-                        elif i == titles[3]:
-                            index = 3
-                        elif i == titles[4]:
-                            index = 4
-                        elif i == titles[5]:
-                            index = 5
-                        elif i == titles[6]:
-                            index = 6
-                        elif i == titles[7]:
-                            index = 7
-                        elif i == titles[8]:
-                            index = 8
-                        elif i == titles[9]:
-                            index = 9
-                        elif i == titles[10]:
-                            index = 10
-                        elif i == titles[11]:
-                            index = 11  
-                        elif i == titles[12]:
-                            index = 12
-                        elif i == titles[13]:
-                            index = 13
-                        elif i == titles[14]:
-                            index = 14
-                        elif i == titles[15]:
-                            index = 15
-                        elif i == titles[16]:
-                            index = 16
-                        elif i == titles[17]:
-                            index = 17
-                        elif i == titles[18]:
-                            index = 18
-                        elif i == titles[19]:
-                            index = 19
-                        elif i == titles[20]:
-                            index = 20     
-                        elif i == titles[21]:
-                            index = 21
+                                index = ind
+                                flag = True
+                        if not flag:
+                            titles.append(i)
+                            values.append("")
+                            index = len(titles)-1
+                            print("ALERT: TITLE NOT FOUND IN " + author + ": " + i)
+                        flag = False
                 elif counter == 0: #Skips calories
                     values[index] += i.strip() + '\n'
                     counter += 1
                 elif counter == 1:
-                    counter = 0 
-        c=0
-        for v in values:
+                    counter = 0
+        for ind, v in enumerate(values):
             if v != "":
-                embed.add_field(name=titles[c], value=v,inline= True)
-            c+=1
+                embed.add_field(name=titles[ind], value=v,inline= True)
+            
         embed.set_author(name=author)
-        embed.set_footer(text="Why do Dining Halls have sooo many stations...", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
+        embed.set_footer(text=footer)
         await sendMessage(message_channel, embed)
 
 async def sendMessage(message_channel, embed):
@@ -461,16 +424,29 @@ async def forcePrint(ctx):
     await printMenu(cursor,guild_id=ctx.guild.id)
     db.close()
 
-@bot.command(name='sql') #Print list of commands
-@has_permissions(manage_channels = True)
+
+#MOD CONTROLS - 0 = USER ID
+@bot.command(name='sql')
 async def sqlPrint(ctx):
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT * FROM main")
-    result = cursor.fetchall()
-    for r in result:
-        await ctx.channel.send(r)
-    db.close()
+    if ctx.author.id == 0:
+        if isinstance(ctx.channel, discord.channel.DMChannel):
+            print("SQL Database viewed by: " + ctx.author)
+            db = sqlite3.connect('main.sqlite')
+            cursor = db.cursor()
+            cursor.execute(f"SELECT * FROM main")
+            result = cursor.fetchall()
+            for r in result:
+                await ctx.channel.send(r)
+            db.close()
+
+@bot.command(name='footer')
+async def sqlPrint(ctx, arg1):
+    if ctx.author.id == 0:
+        if isinstance(ctx.channel, discord.channel.DMChannel):
+            global footer
+            print("Footer set to: " + arg1, " by " + ctx.author.name)
+            await ctx.channel.send("Footer set to: " + arg1)
+            footer = arg1
 
 #Run Daily at 1AM
 @tasks.loop(minutes=1)
