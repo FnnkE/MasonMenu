@@ -8,6 +8,8 @@ In order to use the bot use the following commands in the desired channel.
 
 #### $help
 View the following commands in Discord
+#### $time
+View the remaing time until printing
 #### $ikes
 Set the Ike's channel
 #### $viewIkes
@@ -26,8 +28,6 @@ Set Front Royale Commons' channel
 View the channel where Front Royale Commons has been set to
 #### $rmFrontRoyale
 Remove the channel where Front Royale Commons has been set to
-#### $time
-View the number of hours until printing
 
 ## PROBLEMS:
-If you run into any problems using the bot, please contact me on Discord (FnkE#4796) or email me at efunk2@gmu.edu
+If you run into any problems using the bot, please contact me on Discord (FnkE#4796), email me at efunk2@gmu.edu, or create an issue ticket on this repo.

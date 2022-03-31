@@ -71,6 +71,7 @@ async def changePresence(): #updates status stats | still make random?
                 members += guild.member_count
         statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
         status = statuses[index]
+
         await bot.change_presence(activity=discord.Game(name=status))
         index += 1
         if (index == len(statuses)): index = 0
@@ -426,7 +427,6 @@ async def forcePrint(ctx):
     cursor = db.cursor()
     await printMenu(cursor,guild_id=ctx.guild.id)
     db.close()
-
 
 #MOD CONTROLS - 0 = USER ID
 @bot.command(name='sql')
