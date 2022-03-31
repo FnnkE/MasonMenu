@@ -14,7 +14,6 @@ from datetime import datetime, timezone
 from pytz import timezone
 import sqlite3
 import asyncio
-import random
 
 #Menu URLs
 ikesURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16653&locationId=27747017&whereami=http://masondining.sodexomyway.com/dining-near-me/ikes"
@@ -22,11 +21,15 @@ southsideURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locatio
 otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
 
 #Discord Inits
-TOKEN = 'TOKEN'
+data = open('Tokens.txt', 'r')
+TOKEN = data.readline()
+user1 = data.readline()
+user2 = data.readline()
+data.close()
 bot = commands.Bot(command_prefix="|", help_command=None, case_insensitive=True)
 
 global footer 
-footer = "By MasonMenu"
+footer = "Made with pain and suffering"
 
 #Run on Bot Start
 @bot.event
@@ -245,8 +248,8 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             author = "Ikes"
             color = 0x00ff41
             titles = ['METRO GRILL', 'CLARENDON', 'DUPONT - PASTA', 'DUPONT - PIZZA', 'HOT CEREAL/SOUP', 'VIENNA', 'CAPITAL SOUTH - DELI',
-                'EASTERN MARKET', 'SALAD BAR', 'SIMPLE SERVINGS', 'EASTERN-OMELET','MISCELLANEOUS']
-            values = ["","","","","","","","","","","",""]
+                'EASTERN MARKET', 'SALAD BAR', 'SIMPLE SERVINGS', 'EASTERN-OMELET', 'SANDWICH - HOT','MISCELLANEOUS']
+            values = ["","","","","","","","","","","","",""]
             m = menuI
         elif d[2] == 'southside':
             channelID = int(d[1])
@@ -255,9 +258,9 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             author = "Southside"
             color = 0xff9d00
             titles = ['SEMOLINA PASTA', 'FARMERS FIELD', 'GOLD RUSH COLD', 'GRILLED', 'SIMPLE SERVINGS', 'CHEF\'S TABLE', 'INDULGENT', 'ENTREE', 
-                'ENTREE - MEAL', 'SANDWICH - HOT', 'SANDWICH - COLD', 'APPETIZER', 'BREAKFAST', 'OMELET BAR', 'SOUP', 'KNEADED', 'PIZZA', 'HALAL @ CHEF\'S TABLE',
+                'ENTREE - MEAL', 'SANDWICH - HOT', 'SANDWICH - COLD', 'APPETIZER', 'BREAKFAST', 'OMELET BAR', 'SOUP', 'KNEADED', 'PIZZA', 'SALAD', 'HALAL @ CHEF\'S TABLE',
                 'STARCH', "VEGETABLE", 'BEVERAGE', 'DESSERT', 'MISCELLANEOUS','CHEF TABLE 10PM-2AM']    
-            values = ["","","","","","","","","","","","","","","","","","","","","","","","","",""]
+            values = ["","","","","","","","","","","","","","","","","","","","","","","","","","",""]
             m = menuS
         elif d[2] == 'other': 
             channelID = int(d[1])
@@ -428,9 +431,9 @@ async def forcePrint(ctx):
 #MOD CONTROLS - 0 = USER ID
 @bot.command(name='sql')
 async def sqlPrint(ctx):
-    if ctx.author.id == 0:
+    if ctx.author.id == int(user1) or ctx.author.id == int(user2):
         if isinstance(ctx.channel, discord.channel.DMChannel):
-            print("SQL Database viewed by: " + ctx.author)
+            print("SQL Database viewed by: " + ctx.author.name)
             db = sqlite3.connect('main.sqlite')
             cursor = db.cursor()
             cursor.execute(f"SELECT * FROM main")
@@ -441,10 +444,10 @@ async def sqlPrint(ctx):
 
 @bot.command(name='footer')
 async def sqlPrint(ctx, arg1):
-    if ctx.author.id == 0:
+    if ctx.author.id == int(user1) or ctx.author.id == int(user2):
         if isinstance(ctx.channel, discord.channel.DMChannel):
             global footer
-            print("Footer set to: " + arg1, " by " + ctx.author.name)
+            print("Footer set to: " + arg1 + " by " + ctx.author.name)
             await ctx.channel.send("Footer set to: " + arg1)
             footer = arg1
 
@@ -473,6 +476,7 @@ async def calledPerDay():
         sql = ("UPDATE main SET channel_id = ? WHERE guild_id = ? AND name = ?")
         val = (time, 0, 'system')
         cursor.execute(sql,val)
+        await updateMenus()
         await printMenu(cursor)
     db.commit()
     cursor.close()
