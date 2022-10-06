@@ -1,7 +1,4 @@
 #Code By FnkE
-from email.policy import default
-from optparse import Values
-from unittest import case
 import discord
 from discord import Member
 from discord import message
