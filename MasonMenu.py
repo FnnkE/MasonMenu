@@ -1,7 +1,4 @@
 #Code By FnkE
-from email.policy import default
-from optparse import Values
-from unittest import case
 import discord
 from discord import Member
 from discord import message
@@ -19,6 +16,7 @@ import asyncio
 ikesURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16653&locationId=27747017&whereami=http://masondining.sodexomyway.com/dining-near-me/ikes"
 southsideURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locationId=27747003&whereami=http://masondining.sodexomyway.com/dining-near-me/southsideURL"
 globeURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=36397&locationId=27747052&whereami=http://masondining.sodexomyway.com/dining-near-me/the-globe"
+
 otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
 
 #Discord Inits
@@ -27,7 +25,7 @@ TOKEN = data.readline()
 user1 = data.readline()
 user2 = data.readline()
 data.close()
-bot = commands.Bot(command_prefix="|", help_command=None, case_insensitive=True)
+bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
 
 global footer 
 footer = "Made with pain and suffering"
@@ -112,7 +110,7 @@ async def viewMenu(ctx, name):
     elif name == 'southside':
         title = 'Southside'
     elif name == 'globe':
-        title == 'The Globe'
+        title = 'The Globe'
     else:
         title = 'Front Royale Commons'
     db = sqlite3.connect('main.sqlite')
@@ -161,6 +159,13 @@ async def updateMenus():
         print("Globe Response Code: ", globeP.status_code)
         if globeP.status_code == 200: valid = True
     soupG = BeautifulSoup(globeP.content, "lxml")
+
+    valid = False
+    while (valid == False):
+        gP = requests.get(globeURL)
+        print("Globe Response Code: ", gP.status_code)
+        if gP.status_code == 200: valid = True
+    soupG = BeautifulSoup(gP.content, "lxml")
 
     valid = False
     while (valid == False):
@@ -213,7 +218,7 @@ async def rmMenu(ctx, name):
     elif name == 'southside':
         title = 'Southside'
     elif name == 'globe':
-        title == 'The Globe'
+        title = 'The Globe'
     else:
         title = 'Front Royale Commons'
     db = sqlite3.connect('main.sqlite')
@@ -236,6 +241,7 @@ async def rmMenu(ctx, name):
 async def printMenu(cursor, guild_id=0): #Make Visually Better
     global menuI
     global menuS
+    global menuG
     global menuO
     global currentDay
     global idCurrent
@@ -285,65 +291,72 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
             message_channel = bot.get_channel(channelID)
             print(message_channel)
             author = "The Globe"
+
             color = 0xdb66ff
             titles = ['SEMOLINA PASTA', 'FARMERS FIELD', 'GOLD RUSH COLD', 'GRILLED', 'SIMPLE SERVINGS', 'CHEF\'S TABLE', 'INDULGENT', 'ENTREE', 
                 'ENTREE - MEAL', 'SANDWICH - HOT', 'SANDWICH - COLD', 'APPETIZER', 'BREAKFAST', 'OMELET BAR', 'SOUP', 'KNEADED', 'PIZZA', 'SALAD', 'HALAL @ CHEF\'S TABLE',
                 'STARCH', "VEGETABLE", 'BEVERAGE', 'DESSERT', 'MISCELLANEOUS','CHEF TABLE 10PM-2AM']    
             values = ["","","","","","","","","","","","","","","","","","","","","","","","","","",""]
-            m = menuS    
+            m = menuG   
+
         elif d[2] == 'other': 
             channelID = int(d[1])
             message_channel = bot.get_channel(channelID)
             print(message_channel)
             author = "Front Royale"
-            color = 0x0096ff
+            color = 0xffffff
             titles = ['SANDWICH - HOT', 'SANDWICH - COLD', 'ENTREE', 'VEGETABLE', 'CONDIMENT/GARNISH', 'BREAKFAST', 'SALAD DRESSING',
                  'DESSERT', 'PIZZA', 'SALAD', 'ENTREE - SALAD','ENTREE - MEAL', 'STARCH', 'SOUP', 'SNACK', 'BAKERY', 'MISCELLANEOUS']
             values = ["","","","","","","","","","","","","","","","",""]
             m = menuO
         else:
             continue
-        l = m.text.split("\n")
-        #print(l)
-        for i in l:
-            #Adding Text to List Below
-            if i.strip() != '':
-                if i.isupper() == True or i == '-':
-                    if i == 'LUNCH' or i == 'DINNER' or i == 'LATE NIGHT':
-                        c=0
-                        for ind, v in enumerate(values):
-                            if v != "":
-                                embed.add_field(name=titles[c], value=v,inline= True)
-                            c+=1
-                            values[ind] = ""
-                        embed.set_author(name=author)
-                        #embed.set_thumbnail(url="https://content-service.sodexomyway.com/media/southside-hero_tcm991-72218_w1920_h976.jpg?url=https://masondining.sodexomyway.com/")
-                        await sendMessage(message_channel, embed)
-                        embed = discord.Embed(title=i, description= date, color = color)    
-                    elif i == 'BREAKFAST' and breakfastFlag == False:
-                        embed = discord.Embed(title=i, description= date, color = color)
-                        breakfastFlag = True
-                    elif i == 'BRUNCH':
-                        embed = discord.Embed(title=i, description= date, color = color)
-                    else:
-                        for ind, t in enumerate(titles):
-                            if i == t:
-                                index = ind
-                                flag = True
-                        if not flag:
-                            titles.append(i)
-                            values.append("")
-                            index = len(titles)-1
-                            print("ALERT: TITLE NOT FOUND IN " + author + ": " + i)
-                        flag = False
-                elif counter == 0: #Skips calories
-                    values[index] += i.strip() + '\n'
-                    counter += 1
-                elif counter == 1:
-                    counter = 0
-        for ind, v in enumerate(values):
-            if v != "":
-                embed.add_field(name=titles[ind], value=v,inline= True)
+        
+        if m is not None:
+            l = m.text.split("\n")
+        
+            for i in l:
+                #Adding Text to List Below
+                if i.strip() != '':
+                    if i.isupper() == True or i == '-':
+                        if i == 'LUNCH' or i == 'DINNER' or i == 'LATE NIGHT':
+                            c=0
+                            for ind, v in enumerate(values):
+                                if v != "":
+                                    embed.add_field(name=titles[c], value=v,inline= True)
+                                c+=1
+                                values[ind] = ""
+                            embed.set_author(name=author)
+                            #embed.set_thumbnail(url="https://content-service.sodexomyway.com/media/southside-hero_tcm991-72218_w1920_h976.jpg?url=https://masondining.sodexomyway.com/")
+                            await sendMessage(message_channel, embed)
+                            embed = discord.Embed(title=i, description= date, color = color)    
+                        elif i == 'BREAKFAST' and breakfastFlag == False:
+                            embed = discord.Embed(title=i, description= date, color = color)
+                            breakfastFlag = True
+                        elif i == 'BRUNCH':
+                            embed = discord.Embed(title=i, description= date, color = color)
+                        else:
+                            for ind, t in enumerate(titles):
+                                if i == t:
+                                    index = ind
+                                    flag = True
+                            if not flag:
+                                titles.append(i)
+                                values.append("")
+                                index = len(titles)-1
+                                print("ALERT: TITLE NOT FOUND IN " + author + ": " + i)
+                            flag = False
+                    elif counter == 0: #Skips calories
+                        values[index] += i.strip() + '\n'
+                        counter += 1
+                    elif counter == 1:
+                        counter = 0
+            for ind, v in enumerate(values):
+                if v != "":
+                    embed.add_field(name=titles[ind], value=v,inline= True)
+        else:
+            embed = discord.Embed(title="😭", color = color)
+            embed.add_field(name="Menu not posted for today...", value="Menu not posted for today...")
             
         embed.set_author(name=author)
         embed.set_footer(text=footer)
