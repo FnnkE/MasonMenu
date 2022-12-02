@@ -18,6 +18,7 @@ import asyncio
 #Menu URLs
 ikesURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16653&locationId=27747017&whereami=http://masondining.sodexomyway.com/dining-near-me/ikes"
 southsideURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16652&locationId=27747003&whereami=http://masondining.sodexomyway.com/dining-near-me/southsideURL"
+globeURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=36397&locationId=27747052&whereami=http://masondining.sodexomyway.com/dining-near-me/the-globe"
 otherURL = "https://menus.sodexomyway.com/BiteMenu/Menu?menuId=16478&locationId=27747024&whereami=http://masondining.sodexomyway.com/dining-near-me/front-royal"
 
 #Discord Inits
@@ -69,7 +70,7 @@ async def changePresence(): #updates status stats | still make random?
         if (index == 0):
             for guild in guilds:
                 members += guild.member_count
-        statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus']
+        statuses = [f"with {members} users | $help", f"on {len(bot.guilds)} servers | $help", "discord.py", 'with Ike', 'around with the menus', 'exploring the Globe']
         status = statuses[index]
 
         await bot.change_presence(activity=discord.Game(name=status))
@@ -110,6 +111,8 @@ async def viewMenu(ctx, name):
         title = 'Ike\'s'
     elif name == 'southside':
         title = 'Southside'
+    elif name == 'globe':
+        title == 'The Globe'
     else:
         title = 'Front Royale Commons'
     db = sqlite3.connect('main.sqlite')
@@ -129,11 +132,13 @@ async def viewMenu(ctx, name):
 async def updateMenus():
     global ikesP
     global ssP
+    global globeP
     global otherP
     global currentDay
     global idCurrent
     global menuI
     global menuS
+    global menuG
     global menuO
 
     valid = False
@@ -149,6 +154,13 @@ async def updateMenus():
         print("Southside Response Code: ", ssP.status_code)
         if ssP.status_code == 200: valid = True
     soupS = BeautifulSoup(ssP.content, "lxml")
+    
+    valid = False
+    while (valid == False):
+        globeP = requests.get(globeURL)
+        print("Globe Response Code: ", globeP.status_code)
+        if globeP.status_code == 200: valid = True
+    soupG = BeautifulSoup(globeP.content, "lxml")
 
     valid = False
     while (valid == False):
@@ -160,10 +172,11 @@ async def updateMenus():
     currentDay = soupI.find(class_="bite-date current-menu")
     idCurrent = currentDay.get('id') + "-day"
     menuI = soupI.find("div", id=idCurrent)
-    print(idCurrent)
+    print(idCurrent) #might not work if menu stops updating?
 
     menuI = soupI.find("div", id=idCurrent)
     menuS = soupS.find("div", id=idCurrent)
+    menuG = soupG.find("div", id=idCurrent)
     menuO = soupO.find("div", id=idCurrent)
 
 async def setMenu(ctx, name):
@@ -171,6 +184,8 @@ async def setMenu(ctx, name):
         title = 'Ike\'s'
     elif name == 'southside':
         title = 'Southside'
+    elif name == 'globe':
+        title = 'The Globe'
     else:
         title = 'Front Royale Commons'
     db = sqlite3.connect('main.sqlite')
@@ -197,6 +212,8 @@ async def rmMenu(ctx, name):
         title = 'Ike\'s'
     elif name == 'southside':
         title = 'Southside'
+    elif name == 'globe':
+        title == 'The Globe'
     else:
         title = 'Front Royale Commons'
     db = sqlite3.connect('main.sqlite')
@@ -263,6 +280,17 @@ async def printMenu(cursor, guild_id=0): #Make Visually Better
                 'STARCH', "VEGETABLE", 'BEVERAGE', 'DESSERT', 'MISCELLANEOUS','CHEF TABLE 10PM-2AM']    
             values = ["","","","","","","","","","","","","","","","","","","","","","","","","","",""]
             m = menuS
+        elif d[2] == 'globe': #adjust titles and values
+            channelID = int(d[1])
+            message_channel = bot.get_channel(channelID)
+            print(message_channel)
+            author = "The Globe"
+            color = 0xdb66ff
+            titles = ['SEMOLINA PASTA', 'FARMERS FIELD', 'GOLD RUSH COLD', 'GRILLED', 'SIMPLE SERVINGS', 'CHEF\'S TABLE', 'INDULGENT', 'ENTREE', 
+                'ENTREE - MEAL', 'SANDWICH - HOT', 'SANDWICH - COLD', 'APPETIZER', 'BREAKFAST', 'OMELET BAR', 'SOUP', 'KNEADED', 'PIZZA', 'SALAD', 'HALAL @ CHEF\'S TABLE',
+                'STARCH', "VEGETABLE", 'BEVERAGE', 'DESSERT', 'MISCELLANEOUS','CHEF TABLE 10PM-2AM']    
+            values = ["","","","","","","","","","","","","","","","","","","","","","","","","","",""]
+            m = menuS    
         elif d[2] == 'other': 
             channelID = int(d[1])
             message_channel = bot.get_channel(channelID)
@@ -361,6 +389,23 @@ async def viewSS(ctx):
 async def rmSS(ctx):
     await rmMenu(ctx, 'southside')
 
+#Run on $globe
+@bot.command(name='globe')
+@has_permissions(manage_channels = True)
+async def frontroyale(ctx):
+    await setMenu(ctx, 'globe')
+    await timeCalc()
+
+@bot.command(name='viewglobe')
+@has_permissions(manage_channels = True)
+async def viewOther(ctx):
+    await viewMenu(ctx, 'globe')
+
+@bot.command(name='rmglobe')
+@has_permissions(manage_channels = True)
+async def rmOther(ctx):
+    await rmMenu(ctx, 'globe')
+
 #Run on $frontroyale
 @bot.command(name='frontroyale')
 @has_permissions(manage_channels = True)
@@ -376,7 +421,7 @@ async def viewOther(ctx):
 @bot.command(name='rmfrontroyale')
 @has_permissions(manage_channels = True)
 async def rmOther(ctx):
-    await rmMenu(ctx, 'other')
+    await rmMenu(ctx, 'other')   
 
 @bot.command(name='time')
 @has_permissions(manage_channels = True)
@@ -409,13 +454,16 @@ async def help(ctx):
     message = """   Commands - \n
                     **$ikes** - Set channel to print Ike\'s menu \n
                     **$southside** - Set channel to print Southside\'s menu \n
-                    **$frontroyale** - Set channel to print Front Royale Common\'s menu \n
-                    **$viewikes** - View the channel where Ike\'s has been set to \n
-                    **$viewsouthside** - View the channel where Southside\'s has been set to \n
-                    **$viewikes** - View the channel where Front Royales\'s has been set to \n
-                    **$rmIkes** - Remove the channel where Ike\'s has been set to \n
-                    **$rmSouthside** - Remove the channel where Southside has been set to \n
-                    **$rmFrontRoyale** - Remove the channel where Front Royale has been set to \n
+                    **$globe** - Set channel to print The Globes\'s menu \n
+                    **$frontRoyale** - Set channel to print Front Royale Common\'s menu \n
+                    **$viewIkes** - View the channel where Ike\'s menu has been set to print \n
+                    **$viewSouthside** - View the channel where Southside\'s menu has been set to print \n
+                    **$viewGlobe** - View the channel where The Globes\'s menu has been set to print \n
+                    **$viewFrontRoyale** - View the channel where Front Royales\'s menu has been set to print \n
+                    **$rmIkes** - Remove the channel where Ike\'s menu has been set to print \n
+                    **$rmSouthside** - Remove the channel where Southside\'s menu has been set to print \n
+                    **$rmGlobe** - Remove the channel where The Globes\'s menu has been set to print \n
+                    **$rmFrontRoyale** - Remove the channel where Front Royale\'s menu has been set to print\n
                     **$time** - Check how long until next print (hh:mm) \n
                     **$print** - Force print all menus for your server \n"""
     await ctx.channel.send(message)
